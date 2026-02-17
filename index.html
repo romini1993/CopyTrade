@@ -85,7 +85,6 @@
         @keyframes fadein { from {bottom: 70px; opacity: 0;} to {bottom: 100px; opacity: 1;} }
         @keyframes fadeout { from {bottom: 100px; opacity: 1;} to {bottom: 70px; opacity: 0;} }
         
-        /* Gaya baru buat info update */
         .update-info { font-size: 9px; color: var(--subtext); text-align: center; margin-top: 8px; opacity: 0.6; }
     </style>
 </head>
@@ -152,6 +151,7 @@
     let usdToIdr = 16000;
     let prices = {};
     let changes = {};
+    let coinMapCG = {};
     let currentTab = 'exchange'; 
     let isFetching = false;
     let watchlist = JSON.parse(localStorage.getItem('my_assets_v2') || '[]');
@@ -165,14 +165,6 @@
     let isLongPressActive = false;
     let touchStartY = 0;
     let isMoving = false;
-
-    // Map ID CoinGecko untuk fallback koin micin
-    const coinIdMap = {
-        "BTC": "bitcoin", "ETH": "ethereum", "USDT": "tether", "BNB": "binancecoin", 
-        "SOL": "solana", "XRP": "ripple", "ADA": "cardano", "DOGE": "dogecoin",
-        "MATIC": "polygon-ecosystem-token", "DOT": "polkadot", "TRX": "tron", 
-        "AVAX": "avalanche-2", "SHIB": "shiba-inu", "LTC": "litecoin", "PEPE": "pepe"
-    };
 
     const exchangeLogos = { 
         "BINANCE": "https://assets.coingecko.com/markets/images/52/standard/binance.jpg?1706864274", 
@@ -199,7 +191,7 @@
         document.getElementById('sort-order').value = localStorage.getItem('last_sort') || 'manual';
         document.getElementById('currency-view').value = localStorage.getItem('last_cur') || 'IDR';
         watchlist.forEach(s => { if(!coinSources[s]) coinSources[s] = []; });
-        renderList(); fetchKurs(); fetchAll();
+        renderList(); fetchKurs(); fetchCoinMap(); fetchAll();
         setInterval(fetchAll, 60000); 
     };
 
@@ -247,13 +239,12 @@
         }
     }
 
-    // FUNGSI INI YANG DIUBAH: Bybit -> Binance -> CoinGecko
+    async function fetchCoinMap() { try { const r = await fetch('https://api.coingecko.com/api/v3/coins/list'); (await r.json()).forEach(c => { coinMapCG[c.symbol.toUpperCase()] = c.id; }); } catch(e) {} }
+
     async function fetchAll() {
         if(isFetching) return; isFetching = true;
-        
         let remainingCoins = watchlist.filter(s => !['IDR','USDT','USDC','USD','BUSD'].includes(s));
         
-        // 1. Ambil dari Bybit
         try {
             const bybitRes = await fetch('https://api.bybit.com/v5/market/tickers?category=spot');
             const bybitData = await bybitRes.json();
@@ -269,7 +260,6 @@
             }
         } catch(e) {}
 
-        // 2. Ambil dari Binance (buat yang belum ketemu di Bybit)
         if(remainingCoins.length > 0) {
             try {
                 const binanceRes = await fetch('https://api.binance.com/api/v3/ticker/24hr');
@@ -285,35 +275,27 @@
             } catch(e) {}
         }
 
-        // 3. Ambil dari CoinGecko (gudang terakhir buat koin micin)
-        if(remainingCoins.length > 0) {
-            let ids = remainingCoins.map(s => coinIdMap[s] || s.toLowerCase()).join(',');
-            try {
-                const cgRes = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true`);
-                const cgData = await cgRes.json();
-                remainingCoins.forEach(s => {
-                    const id = coinIdMap[s] || s.toLowerCase();
-                    if(cgData[id]) {
-                        prices[s] = cgData[id].usd;
-                        changes[s] = (cgData[id].usd_24h_change || 0).toFixed(2);
+        for (const s of remainingCoins) {
+            if (coinMapCG[s]) {
+                try {
+                    const rcg = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${coinMapCG[s]}&vs_currencies=usd&include_24hr_change=true`);
+                    const dcg = await rcg.json();
+                    if(dcg[coinMapCG[s]]) {
+                        prices[s] = dcg[coinMapCG[s]].usd;
+                        changes[s] = dcg[coinMapCG[s]].usd_24h_change ? dcg[coinMapCG[s]].usd_24h_change.toFixed(2) : "0.00";
                     }
-                });
-            } catch(e) {}
+                } catch(e) {}
+            }
         }
 
-        // Logika koin stabil
         watchlist.forEach(s => {
             if(s === 'IDR') { prices[s] = 1/usdToIdr; changes[s] = "0.00"; }
             else if(['USDT','USDC','USD','BUSD'].includes(s)) { prices[s] = 1; changes[s] = "0.00"; }
             else if(!prices[s]) { prices[s] = 0; changes[s] = "0.00"; }
         });
 
-        // Update keterangan waktu paling bawah
         const now = new Date();
-        const timeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
-        const lastUpEl = document.getElementById('last-update');
-        if(lastUpEl) lastUpEl.innerText = `Update: ${timeStr}`;
-        
+        document.getElementById('last-update').innerText = `Update: ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
         updatePricesOnly(); isFetching = false;
     }
 

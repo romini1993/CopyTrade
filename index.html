@@ -336,7 +336,13 @@
     }
 
     // --- CORE LOGIC ---
-    function switchTab(tab) { currentTab = tab; document.getElementById('tab-ex').classList.toggle('active', tab === 'exchange'); document.getElementById('tab-coin').classList.toggle('active', tab === 'coin'); renderList(); }
+    function switchTab(tab) {
+    currentTab = tab;
+    expandedItem = null; // Tutup semua expand pas pindah tab
+    document.getElementById('tab-coin').classList.toggle('active', tab === 'coin');
+    document.getElementById('tab-exchange').classList.toggle('active', tab === 'exchange');
+    renderList(); // Ini wajib dipanggil biar list-nya berubah
+}
     function updateSettings() { localStorage.setItem('last_sort', document.getElementById('sort-order').value); localStorage.setItem('last_cur', document.getElementById('currency-view').value); renderList(); }
 
     async function fetchKurs() { try { const r = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=USDTIDR'); const d = await r.json(); if(d.price) { usdToIdr = parseFloat(d.price); document.getElementById('kurs-live').innerText = `USD/IDR: ${Math.round(usdToIdr).toLocaleString('id-ID')}`; updatePricesOnly(); } } catch(e) {} }
@@ -355,24 +361,68 @@
     function getCoinTotal(sym) { let t = 0; (coinSources[sym] || []).forEach(src => { const d = balances[sym]?.[src]; t += (typeof d === 'object') ? (parseFloat(d.amount||0) + parseFloat(d.staking||0)) : parseFloat(d||0); }); return t; }
 
     function updatePricesOnly() {
-        const currencyView = document.getElementById('currency-view').value; let totalAllUsd = 0;
-        if (currentTab === 'exchange') {
-            allExchanges.forEach(ex => {
-                let exTotalUsd = 0; watchlist.forEach(sym => { if (coinSources[sym]?.includes(ex)) { const d = balances[sym]?.[ex]; let b = (typeof d === 'object') ? (parseFloat(d.amount||0) + parseFloat(d.staking||0)) : parseFloat(d||0); exTotalUsd += (b * (prices[sym] || 0)); } });
-                totalAllUsd += exTotalUsd; const el = document.getElementById(`val-ex-${ex}`); if (el) el.innerText = (currencyView === 'IDR') ? `Rp ${(exTotalUsd * usdToIdr).toLocaleString('id-ID', {maximumFractionDigits:0})}` : `$${exTotalUsd.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
-            });
-        } else {
-            watchlist.forEach(sym => {
-                const valUsd = getCoinTotal(sym) * (prices[sym] || 0); totalAllUsd += valUsd;
-                const elVal = document.getElementById(`val-coin-${sym}`); const elPrice = document.getElementById(`price-coin-${sym}`); const elChange = document.getElementById(`change-coin-${sym}`);
-                if (elVal) elVal.innerText = (currencyView === 'IDR') ? `Rp ${(valUsd * usdToIdr).toLocaleString('id-ID', {maximumFractionDigits:0})}` : `$${valUsd.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
-                if (elPrice) elPrice.innerText = sym === 'IDR' ? 'Stable IDR' : '$' + (prices[sym]||0).toLocaleString(undefined, {minimumFractionDigits: (prices[sym]||0) < 1 ? 4 : 2});
-                if (elChange) { const c = changes[sym] || "0.00"; elChange.innerText = `${parseFloat(c) >= 0 ? '+' : ''}${c}%`; elChange.className = `change-pct ${parseFloat(c) >= 0 ? 'up' : 'down'}`; }
-            });
+    const currencyView = document.getElementById('currency-view').value;
+    
+    watchlist.forEach(s => {
+        const p = prices[s] || 0;
+        const c = changes[s] || 0;
+        const cClass = c >= 0 ? 'up' : 'down';
+        const pText = currencyView === 'IDR' ? `Rp ${(p * usdToIdr).toLocaleString('id-ID')}` : `$${p.toLocaleString()}`;
+        const cText = `${c >= 0 ? '+' : ''}${c.toFixed(2)}%`;
+
+        // Update di Tab Coin
+        const pEl = document.getElementById(`price-coin-${s}`);
+        const cEl = document.getElementById(`change-coin-${s}`);
+        const vEl = document.getElementById(`val-coin-${s}`);
+        if(pEl) pEl.innerText = pText;
+        if(cEl) { cEl.innerText = cText; cEl.className = 'change-pct ' + cClass; }
+        if(vEl) {
+            const tv = getCoinTotal(s) * p;
+            vEl.innerText = currencyView === 'IDR' ? `Rp ${(tv * usdToIdr).toLocaleString('id-ID', {maximumFractionDigits:0})}` : `$${tv.toLocaleString(undefined, {minimumFractionDigits:2})}`;
         }
-        document.getElementById('total-all-idr').innerText = `Rp ${Math.round(totalAllUsd*usdToIdr).toLocaleString('id-ID')}`;
-        document.getElementById('total-all-usd').innerText = `$${totalAllUsd.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
-    }
+
+        // Update di DALEM Tab Exchange (Sub-item)
+        allExchanges.forEach(ex => {
+            const exPriceEl = document.getElementById(`price-ex-${ex}-${s}`);
+            const exChangeEl = document.getElementById(`change-ex-${ex}-${s}`);
+            const exValEl = document.getElementById(`val-ex-${ex}-${s}`);
+            
+            if(exPriceEl) exPriceEl.innerText = pText;
+            if(exChangeEl) { 
+                exChangeEl.innerText = cText; 
+                exChangeEl.style.color = `var(--${cClass})`; 
+            }
+            if(exValEl) {
+                const qty = parseFloat(balances[s]?.[ex]?.amount || 0);
+                const val = qty * p;
+                exValEl.innerText = currencyView === 'IDR' ? `Rp ${(val * usdToIdr).toLocaleString('id-ID', {maximumFractionDigits:0})}` : `$${val.toLocaleString(undefined, {minimumFractionDigits:2})}`;
+            }
+        });
+        
+        // Update per source di Tab Coin
+        (coinSources[s] || []).forEach(src => {
+            const srcValEl = document.getElementById(`val-src-${s}-${src}`);
+            if(srcValEl) {
+                const qty = parseFloat(balances[s]?.[src]?.amount || 0);
+                const val = qty * p;
+                srcValEl.innerText = currencyView === 'IDR' ? `Rp ${(val * usdToIdr).toLocaleString('id-ID', {maximumFractionDigits:0})}` : `$${val.toLocaleString(undefined, {minimumFractionDigits:2})}`;
+            }
+        });
+    });
+
+    // Update Header Total per Exchange
+    allExchanges.forEach(ex => {
+        let totalEx = 0;
+        watchlist.forEach(s => {
+            if(coinSources[s]?.includes(ex)) {
+                const qty = parseFloat(balances[s]?.[ex]?.amount || 0);
+                totalEx += qty * (prices[s] || 0);
+            }
+        });
+        const headEl = document.getElementById(`val-ex-header-${ex}`);
+        if(headEl) headEl.innerText = currencyView === 'IDR' ? `Rp ${(totalEx * usdToIdr).toLocaleString('id-ID', {maximumFractionDigits:0})}` : `$${totalEx.toLocaleString(undefined, {minimumFractionDigits:2})}`;
+    });
+}
 
     function toggleDetail(id) { 
         const target = document.getElementById(`det-${id}`); 

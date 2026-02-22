@@ -397,6 +397,13 @@
     const currencyView = document.getElementById('currency-view').value; 
     let html = "";
     
+    function renderList() {
+    const list = document.getElementById('main-list');
+    const query = document.getElementById('filter-input').value.toUpperCase();
+    const sortType = document.getElementById('sort-order').value;
+    const currencyView = document.getElementById('currency-view').value; 
+    let html = "";
+    
     if (currentTab === 'exchange') {
         let exArr = allExchanges.map(ex => {
             let t = 0; watchlist.forEach(s => { if(coinSources[s]?.includes(ex)) { const d = balances[s]?.[ex]; let b = (typeof d === 'object') ? (parseFloat(d.amount||0) + parseFloat(d.staking||0)) : parseFloat(d||0); t += (b * (prices[s] || 0)); }});
@@ -405,19 +412,18 @@
 
         if (sortType === 'name') exArr.sort((a, b) => a.name.localeCompare(b.name));
         else if (sortType === 'value') exArr.sort((a, b) => b.totalValue - a.totalValue);
-        else if (sortType === 'gainers') exArr.sort((a, b) => b.totalValue - a.totalValue);
 
         exArr.forEach(ex => {
             let brand = ex.name.split(' ')[0]; let suffix = ex.name.split(' ').slice(1).join(' '); const logo = exchangeLogos[brand] || "";
             let subKoin = watchlist.filter(s => coinSources[s]?.includes(ex.name));
 
             html += `<div class="coin-row"><div class="coin-card" onclick="toggleDetail('${ex.name}')" onmousedown="startHold(event,'${ex.name}','exchange')" onmousemove="moveHold(event)" onmouseup="clearHold()" ontouchstart="startHold(event,'${ex.name}','exchange')" ontouchmove="moveHold(event)" ontouchend="clearHold()"><div class="logo-wrapper" style="background:#000">${logo ? `<img src="${logo}">` : `<div class="logo-initial">${brand.substring(0,2)}</div>`}</div><div class="info-group"><span class="symbol">${brand}</span>${suffix ? `<span style="font-size: 11px; color: var(--subtext); font-weight: normal;"> - ${suffix.toLowerCase().replace(/\b\w/g, c => c.toUpperCase())}</span>` : ''}</div><div style="text-align:right; margin-right:10px;"><span id="val-ex-${ex.name}" style="font-weight:bold; font-size:14px;">-</span></div></div><div id="det-${ex.name}" class="details" style="display:${expandedItem === ex.name ? 'block' : 'none'}">${subKoin.map(s => {
-                const d = (balances[s] && balances[s][ex.name]) ? balances[s][ex.name] : {amount:'', staking:''};
-                let rowValue = parseFloat(d.amount || 0) * (prices[s] || 0);
-                // Format teks harga
+                const d = (balances[s] && balances[s][ex.name]) ? balances[s][ex.name] : {amount:0, staking:0};
+                let qty = parseFloat(d.amount || 0);
+                let rowValue = qty * (prices[s] || 0);
                 let txtPrice = (currencyView === 'IDR') ? `Rp ${(rowValue * usdToIdr).toLocaleString('id-ID', {maximumFractionDigits:0})}` : `$${rowValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
 
-                return `<div class="source-row"><label class="source-label"><div class="logo-wrapper" style="width:20px; height:20px; border:none"><img src="any" onerror="handleLogoError(this, '${s}')"></div><span>${s}</span></label><div class="input-wrapper" style="align-items: center; gap: 10px;"><input type="number" class="source-input" style="width: 80px; flex: none;" inputmode="decimal" value="${d.amount||''}" oninput="updateBal('${s}','${ex.name}','amount',this.value)" placeholder="Qty"><span style="font-size: 12px; font-weight: bold; color: var(--accent); white-space: nowrap; min-width: 80px; text-align: right;">${txtPrice}</span></div><span class="del-src" onclick="confirmModal('Hapus ${s}?','delete',()=>removeCoinFromExchange('${s}','${ex.name}'))">×</span></div>`;
+                return `<div class="source-row" style="padding: 8px 4px; border-bottom: 1px solid rgba(255,255,255,0.03);"><label class="source-label"><div class="logo-wrapper" style="width:20px; height:20px; border:none"><img src="any" onerror="handleLogoError(this, '${s}')"></div><span>${s}</span></label><div class="input-wrapper" style="align-items: center; gap: 12px; flex: 1; justify-content: flex-end;"><span style="font-size: 12px; color: var(--text);">${qty.toLocaleString()}</span><span style="font-size: 12px; font-weight: bold; color: var(--accent); white-space: nowrap; min-width: 90px; text-align: right;">${txtPrice}</span></div><span class="del-src" style="margin-left: 10px;" onclick="confirmModal('Hapus ${s}?','delete',()=>removeCoinFromExchange('${s}','${ex.name}'))">×</span></div>`;
             }).join('')}<div class="new-source-box"><input type="text" id="add-coin-to-${ex.name}" class="new-source-input" placeholder="Tambah Coin..." onkeypress="if(event.key==='Enter') addCoinToExchange('${ex.name}')"><button class="new-source-btn" onclick="addCoinToExchange('${ex.name}')">+</button></div></div></div>`;
         });
     } else {
@@ -428,11 +434,12 @@
         filtered.forEach(s => {
             let subSrc = [...(coinSources[s]||[])];
             html += `<div class="coin-row"><div class="coin-card" onclick="toggleDetail('${s}')" onmousedown="startHold(event,'${s}','coin')" onmousemove="moveHold(event)" onmouseup="clearHold()" ontouchstart="startHold(event,'${s}','coin')" ontouchmove="moveHold(event)" ontouchend="clearHold()"><div class="logo-wrapper"><img src="any" onerror="handleLogoError(this, '${s}')"></div><div class="info-group"><span class="symbol">${s}</span><span id="change-coin-${s}" class="change-pct">-</span><br><span id="price-coin-${s}" style="font-size:10px; color:var(--subtext)">-</span></div><div style="text-align:right; margin-right:10px;"><span style="font-weight:bold; font-size:13px;">${getCoinTotal(s).toLocaleString()}</span><br><span id="val-coin-${s}" style="font-size:9px; color:var(--subtext)">-</span></div></div><div id="det-${s}" class="details" style="display:${expandedItem === s ? 'block' : 'none'}">${subSrc.map(src => {
-                const d = (balances[s] && balances[s][src]) ? balances[s][src] : {amount:'', staking:''};
-                let rowValue = parseFloat(d.amount || 0) * (prices[s] || 0);
+                const d = (balances[s] && balances[s][src]) ? balances[s][src] : {amount:0, staking:0};
+                let qty = parseFloat(d.amount || 0);
+                let rowValue = qty * (prices[s] || 0);
                 let txtPrice = (currencyView === 'IDR') ? `Rp ${(rowValue * usdToIdr).toLocaleString('id-ID', {maximumFractionDigits:0})}` : `$${rowValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
 
-                return `<div class="source-row"><span class="source-label" style="padding-left:4px">${src}</span><div class="input-wrapper" style="align-items: center; gap: 10px;"><input type="number" class="source-input" style="width: 80px; flex: none;" inputmode="decimal" value="${d.amount||''}" oninput="updateBal('${s}','${src}','amount',this.value)" placeholder="Qty"><span style="font-size: 12px; font-weight: bold; color: var(--accent); white-space: nowrap; min-width: 80px; text-align: right;">${txtPrice}</span></div><span class="del-src" onclick="confirmModal('Hapus ${src}?','delete',()=>removeSource('${s}','${src}'))">×</span></div>`;
+                return `<div class="source-row" style="padding: 8px 4px; border-bottom: 1px solid rgba(255,255,255,0.03);"><span class="source-label" style="padding-left:4px">${src}</span><div class="input-wrapper" style="align-items: center; gap: 12px; flex: 1; justify-content: flex-end;"><span style="font-size: 12px; color: var(--text);">${qty.toLocaleString()}</span><span style="font-size: 12px; font-weight: bold; color: var(--accent); white-space: nowrap; min-width: 90px; text-align: right;">${txtPrice}</span></div><span class="del-src" style="margin-left: 10px;" onclick="confirmModal('Hapus ${src}?','delete',()=>removeSource('${s}','${src}'))">×</span></div>`;
             }).join('')}<div class="new-source-box"><input type="text" id="new-src-input-${s}" class="new-source-input" placeholder="Source Baru..." onkeypress="if(event.key==='Enter') addCustomSource('${s}')"><button class="new-source-btn" onclick="addCustomSource('${s}')">+</button></div></div></div>`;
         });
     }

@@ -397,13 +397,6 @@
     const currencyView = document.getElementById('currency-view').value; 
     let html = "";
     
-    function renderList() {
-    const list = document.getElementById('main-list');
-    const query = document.getElementById('filter-input').value.toUpperCase();
-    const sortType = document.getElementById('sort-order').value;
-    const currencyView = document.getElementById('currency-view').value; 
-    let html = "";
-    
     if (currentTab === 'exchange') {
         let exArr = allExchanges.map(ex => {
             let t = 0; watchlist.forEach(s => { if(coinSources[s]?.includes(ex)) { const d = balances[s]?.[ex]; let b = (typeof d === 'object') ? (parseFloat(d.amount||0) + parseFloat(d.staking||0)) : parseFloat(d||0); t += (b * (prices[s] || 0)); }});
@@ -414,36 +407,115 @@
         else if (sortType === 'value') exArr.sort((a, b) => b.totalValue - a.totalValue);
 
         exArr.forEach(ex => {
-            let brand = ex.name.split(' ')[0]; let suffix = ex.name.split(' ').slice(1).join(' '); const logo = exchangeLogos[brand] || "";
+            let brand = ex.name.split(' ')[0]; 
+            let suffix = ex.name.split(' ').slice(1).join(' '); 
+            const logo = exchangeLogos[brand] || "";
             let subKoin = watchlist.filter(s => coinSources[s]?.includes(ex.name));
 
-            html += `<div class="coin-row"><div class="coin-card" onclick="toggleDetail('${ex.name}')" onmousedown="startHold(event,'${ex.name}','exchange')" onmousemove="moveHold(event)" onmouseup="clearHold()" ontouchstart="startHold(event,'${ex.name}','exchange')" ontouchmove="moveHold(event)" ontouchend="clearHold()"><div class="logo-wrapper" style="background:#000">${logo ? `<img src="${logo}">` : `<div class="logo-initial">${brand.substring(0,2)}</div>`}</div><div class="info-group"><span class="symbol">${brand}</span>${suffix ? `<span style="font-size: 11px; color: var(--subtext); font-weight: normal;"> - ${suffix.toLowerCase().replace(/\b\w/g, c => c.toUpperCase())}</span>` : ''}</div><div style="text-align:right; margin-right:10px;"><span id="val-ex-${ex.name}" style="font-weight:bold; font-size:14px;">-</span></div></div><div id="det-${ex.name}" class="details" style="display:${expandedItem === ex.name ? 'block' : 'none'}">${subKoin.map(s => {
-                const d = (balances[s] && balances[s][ex.name]) ? balances[s][ex.name] : {amount:0, staking:0};
-                let qty = parseFloat(d.amount || 0);
-                let rowValue = qty * (prices[s] || 0);
-                let txtPrice = (currencyView === 'IDR') ? `Rp ${(rowValue * usdToIdr).toLocaleString('id-ID', {maximumFractionDigits:0})}` : `$${rowValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            html += `
+            <div class="coin-row">
+                <div class="coin-card" onclick="toggleDetail('${ex.name}')" onmousedown="startHold(event,'${ex.name}','exchange')" onmousemove="moveHold(event)" onmouseup="clearHold()" ontouchstart="startHold(event,'${ex.name}','exchange')" ontouchmove="moveHold(event)" ontouchend="clearHold()">
+                    <div class="logo-wrapper" style="background:#000">${logo ? `<img src="${logo}">` : `<div class="logo-initial">${brand.substring(0,2)}</div>`}</div>
+                    <div class="info-group">
+                        <span class="symbol">${brand}</span>
+                        ${suffix ? `<span style="font-size: 11px; color: var(--subtext); font-weight: normal;"> - ${suffix}</span>` : ''}
+                    </div>
+                    <div style="text-align:right; margin-right:10px;">
+                        <span id="val-ex-${ex.name}" style="font-weight:bold; font-size:14px;">-</span>
+                    </div>
+                </div>
+                <div id="det-${ex.name}" class="details" style="display:${expandedItem === ex.name ? 'block' : 'none'}">
+                    ${subKoin.map(s => {
+                        const d = (balances[s] && balances[s][ex.name]) ? balances[s][ex.name] : {amount:0, staking:0};
+                        let qty = parseFloat(d.amount || 0);
+                        let rowValue = qty * (prices[s] || 0);
+                        let p = prices[s] || 0;
+                        let change = changes[s] || 0;
+                        let changeClass = change >= 0 ? 'up' : 'down';
+                        
+                        // Format Harga & Value
+                        let displayPrice = (currencyView === 'IDR') ? `Rp ${(p * usdToIdr).toLocaleString('id-ID')}` : `$${p.toLocaleString()}`;
+                        let displayValue = (currencyView === 'IDR') ? `Rp ${(rowValue * usdToIdr).toLocaleString('id-ID', {maximumFractionDigits:0})}` : `$${rowValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
 
-                return `<div class="source-row" style="padding: 8px 4px; border-bottom: 1px solid rgba(255,255,255,0.03);"><label class="source-label"><div class="logo-wrapper" style="width:20px; height:20px; border:none"><img src="any" onerror="handleLogoError(this, '${s}')"></div><span>${s}</span></label><div class="input-wrapper" style="align-items: center; gap: 12px; flex: 1; justify-content: flex-end;"><span style="font-size: 12px; color: var(--text);">${qty.toLocaleString()}</span><span style="font-size: 12px; font-weight: bold; color: var(--accent); white-space: nowrap; min-width: 90px; text-align: right;">${txtPrice}</span></div><span class="del-src" style="margin-left: 10px;" onclick="confirmModal('Hapus ${s}?','delete',()=>removeCoinFromExchange('${s}','${ex.name}'))">×</span></div>`;
-            }).join('')}<div class="new-source-box"><input type="text" id="add-coin-to-${ex.name}" class="new-source-input" placeholder="Tambah Coin..." onkeypress="if(event.key==='Enter') addCoinToExchange('${ex.name}')"><button class="new-source-btn" onclick="addCoinToExchange('${ex.name}')">+</button></div></div></div>`;
+                        return `
+                        <div class="source-row" style="padding: 10px 8px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: space-between;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <div class="logo-wrapper" style="width:24px; height:24px; border:none"><img src="any" onerror="handleLogoError(this, '${s}')"></div>
+                                <div style="display: flex; flex-direction: column;">
+                                    <div style="display: flex; align-items: center; gap: 5px;">
+                                        <span style="font-weight: bold; font-size: 13px;">${s}</span>
+                                        <span style="font-size: 10px; font-weight: bold; color: var(--${changeClass});">${change >= 0 ? '+' : ''}${change.toFixed(2)}%</span>
+                                    </div>
+                                    <span style="font-size: 10px; color: var(--subtext);">${displayPrice}</span>
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <div style="text-align: right;">
+                                    <div style="font-size: 12px; font-weight: bold;">${qty.toLocaleString()}</div>
+                                    <div style="font-size: 10px; color: var(--subtext);">${displayValue}</div>
+                                </div>
+                                <span class="del-src" onclick="confirmModal('Hapus ${s}?','delete',()=>removeCoinFromExchange('${s}','${ex.name}'))">×</span>
+                            </div>
+                        </div>`;
+                    }).join('')}
+                    <div class="new-source-box">
+                        <input type="text" id="add-coin-to-${ex.name}" class="new-source-input" placeholder="Tambah Coin..." onkeypress="if(event.key==='Enter') addCoinToExchange('${ex.name}')">
+                        <button class="new-source-btn" onclick="addCoinToExchange('${ex.name}')">+</button>
+                    </div>
+                </div>
+            </div>`;
         });
     } else {
+        // TAB COIN (Tetap rapi seperti semula)
         let filtered = watchlist.filter(s => s.includes(query));
         if (sortType === 'name') filtered.sort((a, b) => a.localeCompare(b));
         else if (sortType === 'value') filtered.sort((a, b) => (getCoinTotal(b)*(prices[b]||0)) - (getCoinTotal(a)*(prices[a]||0)));
 
         filtered.forEach(s => {
             let subSrc = [...(coinSources[s]||[])];
-            html += `<div class="coin-row"><div class="coin-card" onclick="toggleDetail('${s}')" onmousedown="startHold(event,'${s}','coin')" onmousemove="moveHold(event)" onmouseup="clearHold()" ontouchstart="startHold(event,'${s}','coin')" ontouchmove="moveHold(event)" ontouchend="clearHold()"><div class="logo-wrapper"><img src="any" onerror="handleLogoError(this, '${s}')"></div><div class="info-group"><span class="symbol">${s}</span><span id="change-coin-${s}" class="change-pct">-</span><br><span id="price-coin-${s}" style="font-size:10px; color:var(--subtext)">-</span></div><div style="text-align:right; margin-right:10px;"><span style="font-weight:bold; font-size:13px;">${getCoinTotal(s).toLocaleString()}</span><br><span id="val-coin-${s}" style="font-size:9px; color:var(--subtext)">-</span></div></div><div id="det-${s}" class="details" style="display:${expandedItem === s ? 'block' : 'none'}">${subSrc.map(src => {
-                const d = (balances[s] && balances[s][src]) ? balances[s][src] : {amount:0, staking:0};
-                let qty = parseFloat(d.amount || 0);
-                let rowValue = qty * (prices[s] || 0);
-                let txtPrice = (currencyView === 'IDR') ? `Rp ${(rowValue * usdToIdr).toLocaleString('id-ID', {maximumFractionDigits:0})}` : `$${rowValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            html += `
+            <div class="coin-row">
+                <div class="coin-card" onclick="toggleDetail('${s}')" onmousedown="startHold(event,'${s}','coin')" onmousemove="moveHold(event)" onmouseup="clearHold()" ontouchstart="startHold(event,'${s}','coin')" ontouchmove="moveHold(event)" ontouchend="clearHold()">
+                    <div class="logo-wrapper"><img src="any" onerror="handleLogoError(this, '${s}')"></div>
+                    <div class="info-group">
+                        <span class="symbol">${s}</span>
+                        <span id="change-coin-${s}" class="change-pct">-</span><br>
+                        <span id="price-coin-${s}" style="font-size:10px; color:var(--subtext)">-</span>
+                    </div>
+                    <div style="text-align:right; margin-right:10px;">
+                        <span style="font-weight:bold; font-size:13px;">${getCoinTotal(s).toLocaleString()}</span><br>
+                        <span id="val-coin-${s}" style="font-size:9px; color:var(--subtext)">-</span>
+                    </div>
+                </div>
+                <div id="det-${s}" class="details" style="display:${expandedItem === s ? 'block' : 'none'}">
+                    ${subSrc.map(src => {
+                        const d = (balances[s] && balances[s][src]) ? balances[s][src] : {amount:0, staking:0};
+                        let qty = parseFloat(d.amount || 0);
+                        let rowValue = qty * (prices[s] || 0);
+                        let displayValue = (currencyView === 'IDR') ? `Rp ${(rowValue * usdToIdr).toLocaleString('id-ID', {maximumFractionDigits:0})}` : `$${rowValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
 
-                return `<div class="source-row" style="padding: 8px 4px; border-bottom: 1px solid rgba(255,255,255,0.03);"><span class="source-label" style="padding-left:4px">${src}</span><div class="input-wrapper" style="align-items: center; gap: 12px; flex: 1; justify-content: flex-end;"><span style="font-size: 12px; color: var(--text);">${qty.toLocaleString()}</span><span style="font-size: 12px; font-weight: bold; color: var(--accent); white-space: nowrap; min-width: 90px; text-align: right;">${txtPrice}</span></div><span class="del-src" style="margin-left: 10px;" onclick="confirmModal('Hapus ${src}?','delete',()=>removeSource('${s}','${src}'))">×</span></div>`;
-            }).join('')}<div class="new-source-box"><input type="text" id="new-src-input-${s}" class="new-source-input" placeholder="Source Baru..." onkeypress="if(event.key==='Enter') addCustomSource('${s}')"><button class="new-source-btn" onclick="addCustomSource('${s}')">+</button></div></div></div>`;
+                        return `
+                        <div class="source-row" style="padding: 10px 8px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: space-between;">
+                            <span class="source-label" style="font-weight: bold; font-size: 13px;">${src}</span>
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <div style="text-align: right;">
+                                    <div style="font-size: 12px; font-weight: bold;">${qty.toLocaleString()}</div>
+                                    <div style="font-size: 10px; color: var(--subtext);">${displayValue}</div>
+                                </div>
+                                <span class="del-src" onclick="confirmModal('Hapus ${src}?','delete',()=>removeSource('${s}','${src}'))">×</span>
+                            </div>
+                        </div>`;
+                    }).join('')}
+                    <div class="new-source-box">
+                        <input type="text" id="new-src-input-${s}" class="new-source-input" placeholder="Source Baru..." onkeypress="if(event.key==='Enter') addCustomSource('${s}')">
+                        <button class="new-source-btn" onclick="addCustomSource('${s}')">+</button>
+                    </div>
+                </div>
+            </div>`;
         });
     }
-    list.innerHTML = html; updatePricesOnly();
+    list.innerHTML = html; 
+    updatePricesOnly();
 }
     // --- UTILS ---
     function saveAll() { localStorage.setItem('my_assets_v2', JSON.stringify(watchlist)); localStorage.setItem('my_balances_v2', JSON.stringify(balances)); localStorage.setItem('my_coin_sources', JSON.stringify(coinSources)); localStorage.setItem('my_exchanges_v2', JSON.stringify(allExchanges)); }

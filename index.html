@@ -338,10 +338,12 @@
     // --- CORE LOGIC ---
     function switchTab(tab) {
     currentTab = tab;
-    expandedItem = null; // Tutup detail biar ngga bug
+    expandedItem = null;
+    // Update UI tombol aktif
     document.getElementById('tab-coin').classList.toggle('active', tab === 'coin');
     document.getElementById('tab-exchange').classList.toggle('active', tab === 'exchange');
-    renderList(); // Panggil render ulang biar list berubah total
+    // Render ulang list-nya
+    renderList();
 }
     function updateSettings() { localStorage.setItem('last_sort', document.getElementById('sort-order').value); localStorage.setItem('last_cur', document.getElementById('currency-view').value); renderList(); }
 
@@ -370,7 +372,7 @@
         const pText = currencyView === 'IDR' ? `Rp ${(p * usdToIdr).toLocaleString('id-ID')}` : `$${p.toLocaleString()}`;
         const cText = `${c >= 0 ? '+' : ''}${c.toFixed(2)}%`;
 
-        // Update di Tab Coin
+        // Update Tab Coin (Main)
         const pEl = document.getElementById(`price-coin-${s}`);
         const cEl = document.getElementById(`change-coin-${s}`);
         const vEl = document.getElementById(`val-coin-${s}`);
@@ -381,7 +383,7 @@
             vEl.innerText = currencyView === 'IDR' ? `Rp ${(tv * usdToIdr).toLocaleString('id-ID', {maximumFractionDigits:0})}` : `$${tv.toLocaleString(undefined, {minimumFractionDigits:2})}`;
         }
 
-        // Update di DALEM Tab Exchange (Sub-item)
+        // Update Sub-Item di Tab Exchange
         allExchanges.forEach(ex => {
             const safeEx = ex.replace(/\s+/g, '_');
             const exPriceEl = document.getElementById(`price-ex-${safeEx}-${s}`);
@@ -399,8 +401,8 @@
                 exValEl.innerText = currencyView === 'IDR' ? `Rp ${(val * usdToIdr).toLocaleString('id-ID', {maximumFractionDigits:0})}` : `$${val.toLocaleString(undefined, {minimumFractionDigits:2})}`;
             }
         });
-        
-        // Update per source di Tab Coin
+
+        // Update Sub-Item di Tab Coin
         (coinSources[s] || []).forEach(src => {
             const safeSrc = src.replace(/\s+/g, '_');
             const srcValEl = document.getElementById(`val-src-${s}-${safeSrc}`);
@@ -450,16 +452,26 @@
     
     if (currentTab === 'exchange') {
         let exArr = allExchanges.map(ex => {
-            let t = 0; watchlist.forEach(s => { if(coinSources[s]?.includes(ex)) { const d = balances[s]?.[ex]; let b = (typeof d === 'object') ? (parseFloat(d.amount||0) + parseFloat(d.staking||0)) : parseFloat(d||0); t += (b * (prices[s] || 0)); }});
+            let t = 0; 
+            watchlist.forEach(s => { 
+                if((coinSources[s] || []).includes(ex)) { 
+                    const d = balances[s]?.[ex]; 
+                    let b = (typeof d === 'object') ? (parseFloat(d.amount||0) + parseFloat(d.staking||0)) : parseFloat(d||0); 
+                    t += (b * (prices[s] || 0)); 
+                }
+            });
             return { name: ex, totalValue: t };
-        }).filter(ex => ex.name.includes(query));
+        }).filter(ex => ex.name.toUpperCase().includes(query));
 
         if (sortType === 'name') exArr.sort((a, b) => a.name.localeCompare(b.name));
         else if (sortType === 'value') exArr.sort((a, b) => b.totalValue - a.totalValue);
 
         exArr.forEach(ex => {
-            let brand = ex.name.split(' ')[0]; let suffix = ex.name.split(' ').slice(1).join(' '); const logo = exchangeLogos[brand] || "";
+            let brand = ex.name.split(' ')[0]; 
+            let suffix = ex.name.split(' ').slice(1).join(' '); 
+            const logo = exchangeLogos[brand] || "";
             let subKoin = watchlist.filter(s => (coinSources[s] || []).includes(ex.name));
+            let safeEx = ex.replace(/\s+/g, '_'); // Bikin ID aman tanpa spasi
 
             html += `
             <div class="coin-row">
@@ -470,7 +482,7 @@
                         ${suffix ? `<span style="font-size: 11px; color: var(--subtext); font-weight: normal;"> - ${suffix}</span>` : ''}
                     </div>
                     <div style="text-align:right; margin-right:10px;">
-                        <span id="val-ex-header-${ex.name.replace(/\s+/g, '_')}" style="font-weight:bold; font-size:14px;">-</span>
+                        <span id="val-ex-header-${safeEx}" style="font-weight:bold; font-size:14px;">-</span>
                     </div>
                 </div>
                 <div id="det-${ex.name}" class="details" style="display:${expandedItem === ex.name ? 'block' : 'none'}">
@@ -484,15 +496,15 @@
                                 <div style="display: flex; flex-direction: column;">
                                     <div style="display: flex; align-items: center; gap: 5px;">
                                         <span style="font-weight: bold; font-size: 13px;">${s}</span>
-                                        <span id="change-ex-${ex.name.replace(/\s+/g, '_')}-${s}" style="font-size: 10px; font-weight: bold;">-</span>
+                                        <span id="change-ex-${safeEx}-${s}" style="font-size: 10px; font-weight: bold;">-</span>
                                     </div>
-                                    <span id="price-ex-${ex.name.replace(/\s+/g, '_')}-${s}" style="font-size: 10px; color: var(--subtext);">-</span>
+                                    <span id="price-ex-${safeEx}-${s}" style="font-size: 10px; color: var(--subtext);">-</span>
                                 </div>
                             </div>
                             <div style="display: flex; align-items: center; gap: 12px;">
                                 <div style="text-align: right;">
                                     <div style="font-size: 12px; font-weight: bold;">${qty.toLocaleString()}</div>
-                                    <div id="val-ex-${ex.name.replace(/\s+/g, '_')}-${s}" style="font-size: 10px; color: var(--subtext);">-</div>
+                                    <div id="val-ex-${safeEx}-${s}" style="font-size: 10px; color: var(--subtext);">-</div>
                                 </div>
                                 <span class="del-src" onclick="confirmModal('Hapus ${s}?','delete',()=>removeCoinFromExchange('${s}','${ex.name}'))">×</span>
                             </div>
@@ -502,6 +514,7 @@
             </div>`;
         });
     } else {
+        // --- TAB COIN ---
         let filtered = watchlist.filter(s => s.includes(query));
         if (sortType === 'name') filtered.sort((a, b) => a.localeCompare(b));
         else if (sortType === 'value') filtered.sort((a, b) => (getCoinTotal(b)*(prices[b]||0)) - (getCoinTotal(a)*(prices[a]||0)));
@@ -526,13 +539,14 @@
                     ${subSrc.map(src => {
                         const d = (balances[s] && balances[s][src]) ? balances[s][src] : {amount:0, staking:0};
                         let qty = parseFloat(d.amount || 0);
+                        let safeSrc = src.replace(/\s+/g, '_');
                         return `
                         <div class="source-row" style="padding: 10px 8px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: space-between;">
                             <span class="source-label" style="font-weight: bold; font-size: 13px;">${src}</span>
                             <div style="display: flex; align-items: center; gap: 12px;">
                                 <div style="text-align: right;">
                                     <div style="font-size: 12px; font-weight: bold;">${qty.toLocaleString()}</div>
-                                    <div id="val-src-${s}-${src.replace(/\s+/g, '_')}" style="font-size: 10px; color: var(--subtext);">-</div>
+                                    <div id="val-src-${s}-${safeSrc}" style="font-size: 10px; color: var(--subtext);">-</div>
                                 </div>
                                 <span class="del-src" onclick="confirmModal('Hapus ${src}?','delete',()=>removeSource('${s}','${src}'))">×</span>
                             </div>
@@ -543,7 +557,7 @@
         });
     }
     list.innerHTML = html;
-    setTimeout(updatePricesOnly, 50); // Kasih jeda dikit biar DOM ke-render dulu
+    updatePricesOnly(); // Update harga setelah render selesai
 }
     // --- UTILS ---
     function saveAll() { localStorage.setItem('my_assets_v2', JSON.stringify(watchlist)); localStorage.setItem('my_balances_v2', JSON.stringify(balances)); localStorage.setItem('my_coin_sources', JSON.stringify(coinSources)); localStorage.setItem('my_exchanges_v2', JSON.stringify(allExchanges)); }

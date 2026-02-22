@@ -338,10 +338,10 @@
     // --- CORE LOGIC ---
     function switchTab(tab) {
     currentTab = tab;
-    expandedItem = null; // Tutup semua expand pas pindah tab
+    expandedItem = null; // Tutup detail biar ngga bug
     document.getElementById('tab-coin').classList.toggle('active', tab === 'coin');
     document.getElementById('tab-exchange').classList.toggle('active', tab === 'exchange');
-    renderList(); // Ini wajib dipanggil biar list-nya berubah
+    renderList(); // Panggil render ulang biar list berubah total
 }
     function updateSettings() { localStorage.setItem('last_sort', document.getElementById('sort-order').value); localStorage.setItem('last_cur', document.getElementById('currency-view').value); renderList(); }
 
@@ -383,9 +383,10 @@
 
         // Update di DALEM Tab Exchange (Sub-item)
         allExchanges.forEach(ex => {
-            const exPriceEl = document.getElementById(`price-ex-${ex}-${s}`);
-            const exChangeEl = document.getElementById(`change-ex-${ex}-${s}`);
-            const exValEl = document.getElementById(`val-ex-${ex}-${s}`);
+            const safeEx = ex.replace(/\s+/g, '_');
+            const exPriceEl = document.getElementById(`price-ex-${safeEx}-${s}`);
+            const exChangeEl = document.getElementById(`change-ex-${safeEx}-${s}`);
+            const exValEl = document.getElementById(`val-ex-${safeEx}-${s}`);
             
             if(exPriceEl) exPriceEl.innerText = pText;
             if(exChangeEl) { 
@@ -401,7 +402,8 @@
         
         // Update per source di Tab Coin
         (coinSources[s] || []).forEach(src => {
-            const srcValEl = document.getElementById(`val-src-${s}-${src}`);
+            const safeSrc = src.replace(/\s+/g, '_');
+            const srcValEl = document.getElementById(`val-src-${s}-${safeSrc}`);
             if(srcValEl) {
                 const qty = parseFloat(balances[s]?.[src]?.amount || 0);
                 const val = qty * p;
@@ -414,16 +416,15 @@
     allExchanges.forEach(ex => {
         let totalEx = 0;
         watchlist.forEach(s => {
-            if(coinSources[s]?.includes(ex)) {
+            if((coinSources[s] || []).includes(ex)) {
                 const qty = parseFloat(balances[s]?.[ex]?.amount || 0);
                 totalEx += qty * (prices[s] || 0);
             }
         });
-        const headEl = document.getElementById(`val-ex-header-${ex}`);
+        const headEl = document.getElementById(`val-ex-header-${ex.replace(/\s+/g, '_')}`);
         if(headEl) headEl.innerText = currencyView === 'IDR' ? `Rp ${(totalEx * usdToIdr).toLocaleString('id-ID', {maximumFractionDigits:0})}` : `$${totalEx.toLocaleString(undefined, {minimumFractionDigits:2})}`;
     });
 }
-
     function toggleDetail(id) { 
         const target = document.getElementById(`det-${id}`); 
         if (!target) return; 
@@ -457,10 +458,8 @@
         else if (sortType === 'value') exArr.sort((a, b) => b.totalValue - a.totalValue);
 
         exArr.forEach(ex => {
-            let brand = ex.name.split(' ')[0]; 
-            let suffix = ex.name.split(' ').slice(1).join(' '); 
-            const logo = exchangeLogos[brand] || "";
-            let subKoin = watchlist.filter(s => coinSources[s]?.includes(ex.name));
+            let brand = ex.name.split(' ')[0]; let suffix = ex.name.split(' ').slice(1).join(' '); const logo = exchangeLogos[brand] || "";
+            let subKoin = watchlist.filter(s => (coinSources[s] || []).includes(ex.name));
 
             html += `
             <div class="coin-row">
@@ -471,7 +470,7 @@
                         ${suffix ? `<span style="font-size: 11px; color: var(--subtext); font-weight: normal;"> - ${suffix}</span>` : ''}
                     </div>
                     <div style="text-align:right; margin-right:10px;">
-                        <span id="val-ex-header-${ex.name}" style="font-weight:bold; font-size:14px;">-</span>
+                        <span id="val-ex-header-${ex.name.replace(/\s+/g, '_')}" style="font-weight:bold; font-size:14px;">-</span>
                     </div>
                 </div>
                 <div id="det-${ex.name}" class="details" style="display:${expandedItem === ex.name ? 'block' : 'none'}">
@@ -485,15 +484,15 @@
                                 <div style="display: flex; flex-direction: column;">
                                     <div style="display: flex; align-items: center; gap: 5px;">
                                         <span style="font-weight: bold; font-size: 13px;">${s}</span>
-                                        <span id="change-ex-${ex.name}-${s}" style="font-size: 10px; font-weight: bold;">-</span>
+                                        <span id="change-ex-${ex.name.replace(/\s+/g, '_')}-${s}" style="font-size: 10px; font-weight: bold;">-</span>
                                     </div>
-                                    <span id="price-ex-${ex.name}-${s}" style="font-size: 10px; color: var(--subtext);">-</span>
+                                    <span id="price-ex-${ex.name.replace(/\s+/g, '_')}-${s}" style="font-size: 10px; color: var(--subtext);">-</span>
                                 </div>
                             </div>
                             <div style="display: flex; align-items: center; gap: 12px;">
                                 <div style="text-align: right;">
                                     <div style="font-size: 12px; font-weight: bold;">${qty.toLocaleString()}</div>
-                                    <div id="val-ex-${ex.name}-${s}" style="font-size: 10px; color: var(--subtext);">-</div>
+                                    <div id="val-ex-${ex.name.replace(/\s+/g, '_')}-${s}" style="font-size: 10px; color: var(--subtext);">-</div>
                                 </div>
                                 <span class="del-src" onclick="confirmModal('Hapus ${s}?','delete',()=>removeCoinFromExchange('${s}','${ex.name}'))">×</span>
                             </div>
@@ -503,7 +502,6 @@
             </div>`;
         });
     } else {
-        // TAB COIN tetap pake logic lama elu tapi ID-nya dipastiin sinkron
         let filtered = watchlist.filter(s => s.includes(query));
         if (sortType === 'name') filtered.sort((a, b) => a.localeCompare(b));
         else if (sortType === 'value') filtered.sort((a, b) => (getCoinTotal(b)*(prices[b]||0)) - (getCoinTotal(a)*(prices[a]||0)));
@@ -534,7 +532,7 @@
                             <div style="display: flex; align-items: center; gap: 12px;">
                                 <div style="text-align: right;">
                                     <div style="font-size: 12px; font-weight: bold;">${qty.toLocaleString()}</div>
-                                    <div id="val-src-${s}-${src}" style="font-size: 10px; color: var(--subtext);">-</div>
+                                    <div id="val-src-${s}-${src.replace(/\s+/g, '_')}" style="font-size: 10px; color: var(--subtext);">-</div>
                                 </div>
                                 <span class="del-src" onclick="confirmModal('Hapus ${src}?','delete',()=>removeSource('${s}','${src}'))">×</span>
                             </div>
@@ -545,7 +543,7 @@
         });
     }
     list.innerHTML = html;
-    updatePricesOnly();
+    setTimeout(updatePricesOnly, 50); // Kasih jeda dikit biar DOM ke-render dulu
 }
     // --- UTILS ---
     function saveAll() { localStorage.setItem('my_assets_v2', JSON.stringify(watchlist)); localStorage.setItem('my_balances_v2', JSON.stringify(balances)); localStorage.setItem('my_coin_sources', JSON.stringify(coinSources)); localStorage.setItem('my_exchanges_v2', JSON.stringify(allExchanges)); }

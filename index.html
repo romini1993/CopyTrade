@@ -339,10 +339,10 @@
     function switchTab(tab) {
     currentTab = tab;
     expandedItem = null;
-    // Update UI tombol aktif
-    document.getElementById('tab-coin').classList.toggle('active', tab === 'coin');
-    document.getElementById('tab-exchange').classList.toggle('active', tab === 'exchange');
-    // Render ulang list-nya
+    const btnCoin = document.getElementById('tab-coin');
+    const btnEx = document.getElementById('tab-exchange');
+    if(btnCoin) btnCoin.classList.toggle('active', tab === 'coin');
+    if(btnEx) btnEx.classList.toggle('active', tab === 'exchange');
     renderList();
 }
     function updateSettings() { localStorage.setItem('last_sort', document.getElementById('sort-order').value); localStorage.setItem('last_cur', document.getElementById('currency-view').value); renderList(); }
@@ -372,7 +372,6 @@
         const pText = currencyView === 'IDR' ? `Rp ${(p * usdToIdr).toLocaleString('id-ID')}` : `$${p.toLocaleString()}`;
         const cText = `${c >= 0 ? '+' : ''}${c.toFixed(2)}%`;
 
-        // Update Tab Coin (Main)
         const pEl = document.getElementById(`price-coin-${s}`);
         const cEl = document.getElementById(`change-coin-${s}`);
         const vEl = document.getElementById(`val-coin-${s}`);
@@ -383,7 +382,6 @@
             vEl.innerText = currencyView === 'IDR' ? `Rp ${(tv * usdToIdr).toLocaleString('id-ID', {maximumFractionDigits:0})}` : `$${tv.toLocaleString(undefined, {minimumFractionDigits:2})}`;
         }
 
-        // Update Sub-Item di Tab Exchange
         allExchanges.forEach(ex => {
             const safeEx = ex.replace(/\s+/g, '_');
             const exPriceEl = document.getElementById(`price-ex-${safeEx}-${s}`);
@@ -396,30 +394,28 @@
                 exChangeEl.style.color = `var(--${cClass})`; 
             }
             if(exValEl) {
-                const qty = parseFloat(balances[s]?.[ex]?.amount || 0);
+                const qty = (balances[s] && balances[s][ex]) ? parseFloat(balances[s][ex].amount || 0) : 0;
                 const val = qty * p;
                 exValEl.innerText = currencyView === 'IDR' ? `Rp ${(val * usdToIdr).toLocaleString('id-ID', {maximumFractionDigits:0})}` : `$${val.toLocaleString(undefined, {minimumFractionDigits:2})}`;
             }
         });
 
-        // Update Sub-Item di Tab Coin
         (coinSources[s] || []).forEach(src => {
             const safeSrc = src.replace(/\s+/g, '_');
             const srcValEl = document.getElementById(`val-src-${s}-${safeSrc}`);
             if(srcValEl) {
-                const qty = parseFloat(balances[s]?.[src]?.amount || 0);
+                const qty = (balances[s] && balances[s][src]) ? parseFloat(balances[s][src].amount || 0) : 0;
                 const val = qty * p;
                 srcValEl.innerText = currencyView === 'IDR' ? `Rp ${(val * usdToIdr).toLocaleString('id-ID', {maximumFractionDigits:0})}` : `$${val.toLocaleString(undefined, {minimumFractionDigits:2})}`;
             }
         });
     });
 
-    // Update Header Total per Exchange
     allExchanges.forEach(ex => {
         let totalEx = 0;
         watchlist.forEach(s => {
-            if((coinSources[s] || []).includes(ex)) {
-                const qty = parseFloat(balances[s]?.[ex]?.amount || 0);
+            if(coinSources[s] && coinSources[s].includes(ex)) {
+                const qty = (balances[s] && balances[s][ex]) ? parseFloat(balances[s][ex].amount || 0) : 0;
                 totalEx += qty * (prices[s] || 0);
             }
         });
@@ -443,8 +439,11 @@
         } 
     }
 
-    function renderList() {
+    // 2. FUNGSI RENDER (Biar ngga blank)
+function renderList() {
     const list = document.getElementById('main-list');
+    if (!list) return;
+
     const query = document.getElementById('filter-input').value.toUpperCase();
     const sortType = document.getElementById('sort-order').value;
     const currencyView = document.getElementById('currency-view').value; 
@@ -454,8 +453,8 @@
         let exArr = allExchanges.map(ex => {
             let t = 0; 
             watchlist.forEach(s => { 
-                if((coinSources[s] || []).includes(ex)) { 
-                    const d = balances[s]?.[ex]; 
+                if(coinSources[s] && coinSources[s].includes(ex)) { 
+                    const d = balances[s] ? balances[s][ex] : 0; 
                     let b = (typeof d === 'object') ? (parseFloat(d.amount||0) + parseFloat(d.staking||0)) : parseFloat(d||0); 
                     t += (b * (prices[s] || 0)); 
                 }
@@ -470,8 +469,8 @@
             let brand = ex.name.split(' ')[0]; 
             let suffix = ex.name.split(' ').slice(1).join(' '); 
             const logo = exchangeLogos[brand] || "";
-            let subKoin = watchlist.filter(s => (coinSources[s] || []).includes(ex.name));
-            let safeEx = ex.replace(/\s+/g, '_'); // Bikin ID aman tanpa spasi
+            let subKoin = watchlist.filter(s => coinSources[s] && coinSources[s].includes(ex.name));
+            let safeEx = ex.replace(/\s+/g, '_'); 
 
             html += `
             <div class="coin-row">
@@ -510,17 +509,20 @@
                             </div>
                         </div>`;
                     }).join('')}
+                    <div class="new-source-box">
+                        <input type="text" id="add-coin-to-${ex.name}" class="new-source-input" placeholder="Tambah Coin..." onkeypress="if(event.key==='Enter') addCoinToExchange('${ex.name}')">
+                        <button class="new-source-btn" onclick="addCoinToExchange('${ex.name}')">+</button>
+                    </div>
                 </div>
             </div>`;
         });
     } else {
-        // --- TAB COIN ---
-        let filtered = watchlist.filter(s => s.includes(query));
+        let filtered = watchlist.filter(s => s.toUpperCase().includes(query));
         if (sortType === 'name') filtered.sort((a, b) => a.localeCompare(b));
         else if (sortType === 'value') filtered.sort((a, b) => (getCoinTotal(b)*(prices[b]||0)) - (getCoinTotal(a)*(prices[a]||0)));
 
         filtered.forEach(s => {
-            let subSrc = [...(coinSources[s]||[])];
+            let subSrc = coinSources[s] || [];
             html += `
             <div class="coin-row">
                 <div class="coin-card" onclick="toggleDetail('${s}')">
@@ -552,12 +554,16 @@
                             </div>
                         </div>`;
                     }).join('')}
+                    <div class="new-source-box">
+                        <input type="text" id="new-src-input-${s}" class="new-source-input" placeholder="Source Baru..." onkeypress="if(event.key==='Enter') addCustomSource('${s}')">
+                        <button class="new-source-btn" onclick="addCustomSource('${s}')">+</button>
+                    </div>
                 </div>
             </div>`;
         });
     }
     list.innerHTML = html;
-    updatePricesOnly(); // Update harga setelah render selesai
+    updatePricesOnly(); 
 }
     // --- UTILS ---
     function saveAll() { localStorage.setItem('my_assets_v2', JSON.stringify(watchlist)); localStorage.setItem('my_balances_v2', JSON.stringify(balances)); localStorage.setItem('my_coin_sources', JSON.stringify(coinSources)); localStorage.setItem('my_exchanges_v2', JSON.stringify(allExchanges)); }

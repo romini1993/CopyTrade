@@ -117,10 +117,18 @@
 
     <script>
         const API_URL = "https://script.google.com/macros/s/AKfycbwWJF1sD1SSUjPCCeCWIFgMOI0LI_58HpzzCPVoTDXDgIMG2jFAfcLOu8WNE1D1zYzl/exec"; 
-        const KURS_IDR = 17550;
+        let currentKursIdr = 17550; // Fallback default jika API lambat
 
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('./sw.js');
+        // Fungsi Ambil Kurs Realtime dari Binance
+        function fetchRealtimeKurs() {
+            fetch("https://api.binance.com/api/v3/ticker/price?symbol=USDTIDR")
+                .then(res => res.json())
+                .then(data => {
+                    if (data && data.price) {
+                        currentKursIdr = parseFloat(data.price);
+                    }
+                })
+                .catch(err => console.log("Pakai kurs fallback:", currentKursIdr));
         }
 
         const getTodayStr = () => {
@@ -158,10 +166,12 @@
         });
 
         window.onload = function() {
+            fetchRealtimeKurs();
             loadData();
         };
 
         function loadData() {
+            document.getElementById('loading').style.display = 'block';
             fetch(API_URL)
                 .then(res => res.json())
                 .then(data => renderDashboard(data))
@@ -193,40 +203,37 @@
             btn.disabled = true;
             btn.innerText = "Menyimpan...";
 
-            const formData = {
-                pair: document.getElementById('pair').value,
-                opened: document.getElementById('opened').value,
-                closed: document.getElementById('closed').value,
-                pnl: document.getElementById('pnl').value
-            };
+            const pair = encodeURIComponent(document.getElementById('pair').value);
+            const opened = encodeURIComponent(document.getElementById('opened').value);
+            const closed = encodeURIComponent(document.getElementById('closed').value);
+            const pnl = encodeURIComponent(document.getElementById('pnl').value);
 
-            fetch(API_URL, {
-                method: "POST",
-                body: JSON.stringify({ action: "add", data: formData })
-            })
-            .then(res => res.json())
-            .then(() => {
-                btn.disabled = false;
-                btn.innerText = "Simpan Trade";
-                document.getElementById('pnl').value = '';
-                loadData();
-            })
-            .catch(err => {
-                alert("Gagal menyimpan: " + err);
-                btn.disabled = false;
-                btn.innerText = "Simpan Trade";
-            });
+            const sendUrl = `${API_URL}?action=add&pair=${pair}&opened=${opened}&closed=${closed}&pnl=${pnl}`;
+
+            fetch(sendUrl, { mode: 'no-cors' })
+                .then(() => {
+                    setTimeout(() => {
+                        btn.disabled = false;
+                        btn.innerText = "Simpan Trade";
+                        document.getElementById('pnl').value = '';
+                        loadData();
+                    }, 1000);
+                })
+                .catch(err => {
+                    alert("Gagal menyimpan data.");
+                    btn.disabled = false;
+                    btn.innerText = "Simpan Trade";
+                });
         }
 
         function handleHapus(no) {
             if (confirm("Yakin mau hapus trade No #" + no + "?")) {
-                fetch(API_URL, {
-                    method: "POST",
-                    body: JSON.stringify({ action: "delete", no: no })
-                })
-                .then(res => res.json())
-                .then(() => loadData())
-                .catch(err => alert("Gagal menghapus: " + err));
+                const deleteUrl = `${API_URL}?action=delete&no=${no}`;
+                fetch(deleteUrl, { mode: 'no-cors' })
+                    .then(() => {
+                        setTimeout(() => loadData(), 1000);
+                    })
+                    .catch(err => alert("Gagal menghapus."));
             }
         }
 
@@ -249,7 +256,6 @@
                 return;
             }
 
-            // Render Seluruh Riwayat
             data.forEach((item, i) => {
                 const pnlNum = parseFloat(item.pnl) || 0;
                 const isProfit = pnlNum >= 0;
@@ -276,7 +282,6 @@
                 tradeContainer.appendChild(div);
             });
 
-            // Render Rekap Harian
             const dailyMap = {};
             data.forEach(item => {
                 const closedDate = item.closed;
@@ -298,7 +303,7 @@
                 
                 var dayName = getDayName(date);
                 var fullDateLabel = dayName ? `${dayName}, ${date}` : date;
-                var totalIdr = formatRupiah(summary.total * KURS_IDR);
+                var totalIdr = formatRupiah(summary.total * currentKursIdr);
 
                 const div = document.createElement('div');
                 div.className = `rise-in p-3 rounded-xl border ${bg} flex items-center justify-between`;

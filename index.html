@@ -38,94 +38,88 @@
 </head>
 <body class="px-4 pt-6 pb-14 flex flex-col items-center">
 
-    <!-- Container dibuat responsive: Max-w-md di HP, Max-w-5xl & Grid 2 Kolom di Desktop -->
-    <div class="w-full max-w-md md:max-w-5xl grid grid-cols-1 md:grid-cols-12 gap-5 items-start">
+    <div class="w-full max-w-md space-y-5">
 
-        <!-- KOLOM KIRI (Header, Stats, Form Input) -> Sticky di Desktop -->
-        <div class="md:col-span-5 lg:col-span-4 space-y-5 md:sticky md:top-6">
-            <!-- Header -->
-            <header class="flex items-center gap-2.5">
-                <div class="w-9 h-9 rounded-lg bg-cyan-400/10 border border-cyan-400/30 flex items-center justify-center text-cyan-300 font-display font-bold">⚡</div>
-                <div>
-                    <h1 class="font-display text-lg font-semibold text-white leading-tight">Fast Trading Log</h1>
-                    <p class="text-xs text-slate-500">Input cepat, rekap otomatis</p>
-                </div>
-            </header>
-
-            <!-- Stats bar -->
-            <div id="statsBar" class="grid grid-cols-3 gap-2">
-                <div class="bg-[#131a29] border border-[#232d42] rounded-xl px-3 py-2.5 text-center">
-                    <div class="text-[10px] text-slate-500 mb-0.5">Total PNL</div>
-                    <div id="statTotal" class="num text-sm font-semibold text-slate-300">–</div>
-                </div>
-                <div class="bg-[#131a29] border border-[#232d42] rounded-xl px-3 py-2.5 text-center">
-                    <div class="text-[10px] text-slate-500 mb-0.5">Trades</div>
-                    <div id="statCount" class="num text-sm font-semibold text-slate-300">–</div>
-                </div>
-                <div class="bg-[#131a29] border border-[#232d42] rounded-xl px-3 py-2.5 text-center">
-                    <div class="text-[10px] text-slate-500 mb-0.5">Win Rate</div>
-                    <div id="statWinRate" class="num text-sm font-semibold text-slate-300">–</div>
-                </div>
+        <!-- Header -->
+        <header class="flex items-center gap-2.5">
+            <div class="w-9 h-9 rounded-lg bg-cyan-400/10 border border-cyan-400/30 flex items-center justify-center text-cyan-300 font-display font-bold">⚡</div>
+            <div>
+                <h1 class="font-display text-lg font-semibold text-white leading-tight">Fast Trading Log</h1>
+                <p class="text-xs text-slate-500">Input cepat, rekap otomatis</p>
             </div>
+        </header>
 
-            <!-- Form Input -->
-            <form id="tradeForm" onsubmit="handleSubmit(event)" class="bg-[#131a29] p-4 rounded-2xl shadow-xl space-y-3 border border-[#232d42]">
-                <div>
-                    <label class="block text-xs font-medium text-slate-400 mb-1">Pair / Koin</label>
-                    <input type="text" id="pair" list="pairList" required placeholder="Contoh: ZECUSDT" class="w-full bg-[#0d1220] border border-[#232d42] rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-cyan-400/60 uppercase">
-                    <datalist id="pairList">
-                        <option value="ZECUSDT">
-                        <option value="ETHUSDT">
-                        <option value="BTCUSDT">
-                        <option value="SKHYNIXUSDT">
-                        <option value="SNDKUSDT">
-                    </datalist>
-                </div>
-
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs font-medium text-slate-400 mb-1">Opened Date</label>
-                        <input type="text" id="opened" required placeholder="dd/mm/yyyy" class="w-full bg-[#0d1220] border border-[#232d42] rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-cyan-400/60">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-slate-400 mb-1">Closed Date</label>
-                        <input type="text" id="closed" required placeholder="dd/mm/yyyy" class="w-full bg-[#0d1220] border border-[#232d42] rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-cyan-400/60">
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-medium text-slate-400 mb-1">Closing PNL (USDT)</label>
-                    <input type="number" step="any" id="pnl" required placeholder="0.00 (minus pakai -)" class="w-full bg-[#0d1220] border border-[#232d42] rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-cyan-400/60 num">
-                </div>
-
-                <button type="submit" id="submitBtn" class="w-full bg-cyan-400 hover:bg-cyan-300 active:scale-[0.99] font-semibold py-3 rounded-xl transition shadow-lg shadow-cyan-400/10 text-slate-950">
-                    Simpan Trade
-                </button>
-            </form>
+        <!-- Stats bar -->
+        <div id="statsBar" class="grid grid-cols-3 gap-2">
+            <div class="bg-[#131a29] border border-[#232d42] rounded-xl px-3 py-2.5 text-center">
+                <div class="text-[10px] text-slate-500 mb-0.5">Total PNL</div>
+                <div id="statTotal" class="num text-sm font-semibold text-slate-300">–</div>
+            </div>
+            <div class="bg-[#131a29] border border-[#232d42] rounded-xl px-3 py-2.5 text-center">
+                <div class="text-[10px] text-slate-500 mb-0.5">Trades</div>
+                <div id="statCount" class="num text-sm font-semibold text-slate-300">–</div>
+            </div>
+            <div class="bg-[#131a29] border border-[#232d42] rounded-xl px-3 py-2.5 text-center">
+                <div class="text-[10px] text-slate-500 mb-0.5">Win Rate</div>
+                <div id="statWinRate" class="num text-sm font-semibold text-slate-300">–</div>
+            </div>
         </div>
 
-        <!-- KOLOM KANAN (Rekap Harian & Seluruh Riwayat) -->
-        <div class="md:col-span-7 lg:col-span-8 space-y-5">
-            <!-- Rekap Harian Section -->
+        <!-- Form Input -->
+        <form id="tradeForm" onsubmit="handleSubmit(event)" class="bg-[#131a29] p-4 rounded-2xl shadow-xl space-y-3 border border-[#232d42]">
             <div>
-                <h2 class="text-xs font-semibold text-slate-400 mb-2">Rekap Harian</h2>
-                <div id="dailySummaryList" class="space-y-2"></div>
+                <label class="block text-xs font-medium text-slate-400 mb-1">Pair / Koin</label>
+                <input type="text" id="pair" list="pairList" required placeholder="Contoh: ZECUSDT" class="w-full bg-[#0d1220] border border-[#232d42] rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-cyan-400/60 uppercase">
+                <datalist id="pairList">
+                    <option value="ZECUSDT">
+                    <option value="ETHUSDT">
+                    <option value="BTCUSDT">
+                    <option value="SKHYNIXUSDT">
+                    <option value="SNDKUSDT">
+                </datalist>
             </div>
 
-            <!-- Recent Trades List -->
-            <div>
-                <h2 class="text-xs font-semibold text-slate-400 mb-2">Seluruh Riwayat Trade</h2>
-                <div id="loading" class="text-center text-xs text-slate-500 py-4">Memuat data...</div>
-                <div id="tradeList" class="space-y-2"></div>
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Opened Date</label>
+                    <input type="text" id="opened" required placeholder="dd/mm/yyyy" class="w-full bg-[#0d1220] border border-[#232d42] rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-cyan-400/60">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Closed Date</label>
+                    <input type="text" id="closed" required placeholder="dd/mm/yyyy" class="w-full bg-[#0d1220] border border-[#232d42] rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-cyan-400/60">
+                </div>
             </div>
+
+            <div>
+                <label class="block text-xs font-medium text-slate-400 mb-1">Closing PNL (USDT)</label>
+                <input type="number" step="any" id="pnl" required placeholder="0.00 (minus pakai -)" class="w-full bg-[#0d1220] border border-[#232d42] rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-cyan-400/60 num">
+            </div>
+
+            <button type="submit" id="submitBtn" class="w-full bg-cyan-400 hover:bg-cyan-300 active:scale-[0.99] font-semibold py-3 rounded-xl transition shadow-lg shadow-cyan-400/10 text-slate-950">
+                Simpan Trade
+            </button>
+        </form>
+
+        <!-- Rekap Harian Section -->
+        <div>
+            <h2 class="text-xs font-semibold text-slate-400 mb-2">Rekap Harian</h2>
+            <div id="dailySummaryList" class="space-y-2"></div>
+        </div>
+
+        <!-- Recent Trades List -->
+        <div>
+            <h2 class="text-xs font-semibold text-slate-400 mb-2">Seluruh Riwayat Trade</h2>
+            <div id="loading" class="text-center text-xs text-slate-500 py-4">Memuat data...</div>
+            <div id="tradeList" class="space-y-2"></div>
         </div>
 
     </div>
 
     <script>
         const API_URL = "https://script.google.com/macros/s/AKfycbwWJF1sD1SSUjPCCeCWIFgMOI0LI_58HpzzCPVoTDXDgIMG2jFAfcLOu8WNE1D1zYzl/exec"; 
-        let currentKursIdr = 17550;
+        let currentKursIdr = 17550; // Fallback default jika API lambat
 
+        // Fungsi Ambil Kurs Realtime dari Binance
         function fetchRealtimeKurs() {
             fetch("https://api.binance.com/api/v3/ticker/price?symbol=USDTIDR")
                 .then(res => res.json())

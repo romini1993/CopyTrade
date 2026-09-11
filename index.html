@@ -55,7 +55,7 @@
         .rise-in { animation: riseIn .3s ease-out both; }
     </style>
 </head>
-<body class="p-4 md:p-6 flex justify-center">
+<body class="p-3 md:p-6 flex justify-center">
 
     <!-- Container Utama Layout 3 Kolom Full Layar -->
     <div class="w-full max-w-[1600px] grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
@@ -133,7 +133,7 @@
 
         <!-- KOLOM 2 (TENGAH): Rekap Harian -->
         <div class="lg:col-span-4 xl:col-span-4 space-y-4 lg:sticky lg:top-6">
-            <div class="porto-card p-5 rounded-2xl space-y-3">
+            <div class="porto-card p-4 sm:p-5 rounded-2xl space-y-3">
                 <div class="flex justify-between items-center mb-1">
                     <h2 class="text-xs font-bold uppercase tracking-wider text-indigo-400">Rekap Harian</h2>
                 </div>
@@ -143,7 +143,7 @@
 
         <!-- KOLOM 3 (KANAN): Seluruh Riwayat Trade -->
         <div class="lg:col-span-4 xl:col-span-4 space-y-4 lg:sticky lg:top-6">
-            <div class="porto-card p-5 rounded-2xl space-y-3">
+            <div class="porto-card p-4 sm:p-5 rounded-2xl space-y-3">
                 <div class="flex justify-between items-center mb-1">
                     <h2 class="text-xs font-bold uppercase tracking-wider text-indigo-400">Riwayat Trade</h2>
                 </div>
@@ -317,7 +317,6 @@
             const deleteUrl = `${API_URL}?action=delete&no=${no}`;
             fetch(deleteUrl, { mode: 'no-cors' })
                 .then(() => {
-                    // Dipercepat refresh-nya ke 300ms agar instant
                     setTimeout(() => loadData(), 300);
                 })
                 .catch(err => alert("Gagal menghapus."));
@@ -342,7 +341,7 @@
                 return;
             }
 
-            // Render Riwayat Trade (Nampilin nomor #ID Kolom A)
+            // Render Riwayat Trade (Mobile Optimized Layout)
             data.forEach((item, i) => {
                 const pnlNum = parseFloat(item.pnl) || 0;
                 const isProfit = pnlNum >= 0;
@@ -351,24 +350,24 @@
                 const totalIdr = formatRupiah(pnlNum * currentKursIdr);
 
                 const div = document.createElement('div');
-                div.className = `rise-in p-3 rounded-xl border ${bgCard} flex justify-between items-center hover:border-slate-700 transition`;
+                div.className = `rise-in p-2.5 sm:p-3 rounded-xl border ${bgCard} flex items-center justify-between hover:border-slate-700 transition gap-1.5`;
                 div.style.animationDelay = `${i * 15}ms`;
                 div.innerHTML = `
-                    <div class="w-1/3 text-left">
-                        <div class="text-xs text-slate-300 font-medium">
-                            <span class="text-indigo-400 font-bold mr-1">#${item.no}</span>${item.closed}
+                    <div class="w-[30%] min-w-0 text-left">
+                        <div class="text-[11px] sm:text-xs text-slate-300 font-medium truncate">
+                            <span class="text-indigo-400 font-bold mr-0.5">#${item.no}</span>${item.closed}
                         </div>
-                        <div class="text-[10px] font-semibold ${isProfit ? 'text-emerald-500' : 'text-rose-500'} uppercase mt-0.5">${isProfit ? 'PROFIT' : 'LOSS'}</div>
+                        <div class="text-[9px] sm:text-[10px] font-semibold ${isProfit ? 'text-emerald-500' : 'text-rose-500'} uppercase mt-0.5">${isProfit ? 'PROFIT' : 'LOSS'}</div>
                     </div>
-                    <div class="w-1/3 text-center">
-                        <div class="font-display font-bold text-sm text-white">${item.pair}</div>
+                    <div class="w-[32%] text-center px-1">
+                        <div class="font-display font-bold text-xs sm:text-sm text-white truncate">${item.pair}</div>
                     </div>
-                    <div class="w-1/3 flex items-center justify-end gap-2 text-right">
-                        <div>
-                            <div class="num font-bold text-sm ${pnlColor}">${isProfit ? '+' : ''}${pnlNum.toFixed(2)} USDT</div>
-                            <div class="text-[10px] text-slate-400 font-medium num mt-0.5">${totalIdr}</div>
+                    <div class="w-[38%] flex items-center justify-end gap-1.5 text-right pl-1">
+                        <div class="min-w-0">
+                            <div class="num font-bold text-xs sm:text-sm ${pnlColor} whitespace-nowrap">${isProfit ? '+' : ''}${pnlNum.toFixed(2)} USDT</div>
+                            <div class="text-[9px] sm:text-[10px] text-slate-400 font-medium num mt-0.5 whitespace-nowrap">${totalIdr}</div>
                         </div>
-                        <button onclick="handleHapus(${item.no})" class="bg-rose-500/10 hover:bg-rose-500/30 text-rose-400 border border-rose-500/20 px-2 py-0.5 rounded text-[11px] font-semibold transition ml-1">
+                        <button onclick="handleHapus(${item.no})" class="bg-rose-500/10 hover:bg-rose-500/30 text-rose-400 border border-rose-500/20 w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center rounded text-[10px] font-semibold transition shrink-0">
                             ✕
                         </button>
                     </div>
@@ -401,18 +400,18 @@
                 var totalIdr = formatRupiah(summary.total * currentKursIdr);
 
                 const div = document.createElement('div');
-                div.className = `rise-in p-3 rounded-xl border ${bg} flex items-center justify-between hover:border-slate-700 transition`;
+                div.className = `rise-in p-2.5 sm:p-3 rounded-xl border ${bg} flex items-center justify-between hover:border-slate-700 transition`;
                 div.style.animationDelay = `${i * 25}ms`;
                 div.innerHTML = `
                     <div>
-                        <div class="font-display font-bold text-sm text-white">${fullDateLabel}</div>
-                        <div class="text-[11px] text-slate-400">${summary.count} trade tertutup</div>
+                        <div class="font-display font-bold text-xs sm:text-sm text-white">${fullDateLabel}</div>
+                        <div class="text-[10px] sm:text-[11px] text-slate-400">${summary.count} trade tertutup</div>
                     </div>
                     <div class="text-right">
-                        <div class="num font-bold text-sm ${color}">
+                        <div class="num font-bold text-xs sm:text-sm ${color} whitespace-nowrap">
                             ${isProf ? '+' : ''}${summary.total.toFixed(2)} USDT
                         </div>
-                        <div class="text-[10px] text-slate-400 font-medium num mt-0.5">
+                        <div class="text-[9px] sm:text-[10px] text-slate-400 font-medium num mt-0.5 whitespace-nowrap">
                             ${totalIdr}
                         </div>
                     </div>

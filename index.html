@@ -288,9 +288,9 @@
                         btn.disabled = false;
                         btn.innerText = "Simpan Position";
                         document.getElementById('pnl').value = '';
-                        loadData();
-                    }, 1500);
-                })
+                    loadData();
+                }, 300); // Dipercepat ke 300ms
+            })
                 .catch(err => {
                     alert("Gagal menyimpan data.");
                     btn.disabled = false;

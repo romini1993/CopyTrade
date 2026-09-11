@@ -116,7 +116,6 @@
     </div>
 
     <script>
-        // TEMPEL URL APLIKASI WEB BARU LU DI SINI
         const API_URL = "https://script.google.com/macros/s/AKfycbwWJF1sD1SSUjPCCeCWIFgMOI0LI_58HpzzCPVoTDXDgIMG2jFAfcLOu8WNE1D1zYzl/exec"; 
         let currentKursIdr = 17550;
 
@@ -167,14 +166,30 @@
 
         window.onload = function() {
             fetchRealtimeKurs();
+            
+            // 1. Tampilkan data dari memori lokal (KURS CEPAT)
+            const cachedData = localStorage.getItem('tradingDataCache');
+            if (cachedData) {
+                try {
+                    renderDashboard(JSON.parse(cachedData));
+                } catch(e) {}
+            }
+            
+            // 2. Tarik data terbaru di background
             loadData();
         };
 
         function loadData() {
-            document.getElementById('loading').style.display = 'block';
+            if (!localStorage.getItem('tradingDataCache')) {
+                document.getElementById('loading').style.display = 'block';
+            }
             fetch(API_URL)
                 .then(res => res.json())
-                .then(data => renderDashboard(data))
+                .then(data => {
+                    // Simpan ke memori lokal
+                    localStorage.setItem('tradingDataCache', JSON.stringify(data));
+                    renderDashboard(data);
+                })
                 .catch(err => handleError(err));
         }
 
@@ -341,7 +356,9 @@
         }
 
         function handleError(err) {
-            document.getElementById('loading').innerText = "Gagal memuat data.";
+            if (!localStorage.getItem('tradingDataCache')) {
+                document.getElementById('loading').innerText = "Gagal memuat data.";
+            }
             console.error(err);
         }
     </script>

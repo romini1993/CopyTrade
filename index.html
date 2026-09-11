@@ -288,9 +288,9 @@
                         btn.disabled = false;
                         btn.innerText = "Simpan Position";
                         document.getElementById('pnl').value = '';
-                    loadData();
-                }, 300); // Dipercepat ke 300ms
-            })
+                        loadData();
+                    }, 300);
+                })
                 .catch(err => {
                     alert("Gagal menyimpan data.");
                     btn.disabled = false;
@@ -317,7 +317,8 @@
             const deleteUrl = `${API_URL}?action=delete&no=${no}`;
             fetch(deleteUrl, { mode: 'no-cors' })
                 .then(() => {
-                    setTimeout(() => loadData(), 1500);
+                    // Dipercepat refresh-nya ke 300ms agar instant
+                    setTimeout(() => loadData(), 300);
                 })
                 .catch(err => alert("Gagal menghapus."));
         };
@@ -341,7 +342,7 @@
                 return;
             }
 
-            // Render Riwayat Trade
+            // Render Riwayat Trade (Nampilin nomor #ID Kolom A)
             data.forEach((item, i) => {
                 const pnlNum = parseFloat(item.pnl) || 0;
                 const isProfit = pnlNum >= 0;
@@ -354,7 +355,9 @@
                 div.style.animationDelay = `${i * 15}ms`;
                 div.innerHTML = `
                     <div class="w-1/3 text-left">
-                        <div class="text-xs text-slate-300 font-medium">${item.closed}</div>
+                        <div class="text-xs text-slate-300 font-medium">
+                            <span class="text-indigo-400 font-bold mr-1">#${item.no}</span>${item.closed}
+                        </div>
                         <div class="text-[10px] font-semibold ${isProfit ? 'text-emerald-500' : 'text-rose-500'} uppercase mt-0.5">${isProfit ? 'PROFIT' : 'LOSS'}</div>
                     </div>
                     <div class="w-1/3 text-center">

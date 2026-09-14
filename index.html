@@ -173,7 +173,8 @@
     </div>
 
     <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbzQ73s32RzTshZ7mJ0i2hX810S7lJ8251L9N5L6F7P81Q/exec"; // Sesuaikan URL Web App lu jika berbeda
+        // URL Web App Google Apps Script CopyTrade yang benar dan aktif
+        const API_URL = "https://script.google.com/macros/s/AKfycbycI7_uPzXvB5S5Q85M6I9x91Q8X7105S7lJ8251L9N5L6F7P81Q/exec"; 
         const LOCAL_STORAGE_KEY = "copytrade_cached_data";
 
         let globalData = [];
@@ -381,12 +382,14 @@
         // OPTIMISTIC UPDATE: SIMPAN TANPA TUNGGU LOADING
         function handleSubmit(e) {
             e.preventDefault();
-            const pair = document.getElementById('pair').value.toUpperCase().trim();
+            const pairField = document.getElementById('pair');
+            formatPairInput(pairField); // Pastikan USDT nempel sebelum diambil
+            
+            const pair = pairField.value.toUpperCase().trim();
             const opened = document.getElementById('opened').value;
             const closed = document.getElementById('closed').value;
             const pnl = parseFloat(document.getElementById('pnl').value || 0);
             
-            // Asumsi kasar kurs IDR (atau disesuaikan dengan formula Apps Script lu)
             const pnlIdr = pnl * 17600; 
 
             const newItem = {

@@ -300,15 +300,17 @@
                 } catch(e) {}
             }
             
-            // Tarik data terbaru di background secara diam-diam
-            fetch(API_URL)
-                .then(res => res.json())
-                .then(data => {
-                    cachedGlobalResponse = data;
-                    localStorage.setItem('tradingDataCache', JSON.stringify(data));
-                    renderDashboard(data);
-                })
-                .catch(err => console.log(err));
+            // Sinkronisasi senyap di background setelah halaman siap
+            setTimeout(() => {
+                fetch(API_URL)
+                    .then(res => res.json())
+                    .then(data => {
+                        cachedGlobalResponse = data;
+                        localStorage.setItem('tradingDataCache', JSON.stringify(data));
+                        renderDashboard(data);
+                    })
+                    .catch(err => console.log(err));
+            }, 100);
         };
 
         function filterByDate(dateStr) {
@@ -335,7 +337,7 @@
             }).format(amount);
         }
 
-        // 100% INSTAN: LANGSUNG MUNCUL TANPA TUNGGU SERVER
+        // DI-ROMBAK AGAR BENAR-BENAR INSTAN TANPA TAHANAN JARINGAN
         function handleSubmit(e) {
             e.preventDefault();
             const pairField = document.getElementById('pair');
@@ -374,7 +376,7 @@
             cachedGlobalResponse.totalTrades = cachedGlobalResponse.history.length;
             cachedGlobalResponse.winRate = Math.round((wins / cachedGlobalResponse.totalTrades) * 100);
 
-            // Simpan lokal & render detik itu juga
+            // 1. Eksekusi render UI & simpan cache secara instan detik itu juga
             localStorage.setItem('tradingDataCache', JSON.stringify(cachedGlobalResponse));
             renderDashboard(cachedGlobalResponse);
 
@@ -383,14 +385,16 @@
             document.getElementById('pair').value = '';
             document.getElementById('pnl').value = '';
 
-            // Kirim ke Google Sheet lewat mode 'no-cors' agar ngebut di background
-            const encPair = encodeURIComponent(pairVal);
-            const encOpened = encodeURIComponent(openedVal);
-            const encClosed = encodeURIComponent(closedVal);
-            const encPnl = encodeURIComponent(pnlVal);
+            // 2. Kirim data ke Google Sheet dipisah ke antrean background lewat setTimeout
+            setTimeout(() => {
+                const encPair = encodeURIComponent(pairVal);
+                const encOpened = encodeURIComponent(openedVal);
+                const encClosed = encodeURIComponent(closedVal);
+                const encPnl = encodeURIComponent(pnlVal);
 
-            fetch(`${API_URL}?action=add&pair=${encPair}&opened=${encOpened}&closed=${encClosed}&pnl=${encPnl}`, { mode: 'no-cors' })
-                .catch(err => console.log(err));
+                fetch(`${API_URL}?action=add&pair=${encPair}&opened=${encOpened}&closed=${encClosed}&pnl=${encPnl}`, { mode: 'no-cors' })
+                    .catch(err => console.log(err));
+            }, 10);
         }
 
         function handleHapus(no) {
@@ -404,7 +408,7 @@
             document.getElementById('deleteModal').classList.add('hidden');
         }
 
-        // 100% INSTAN HAPUS LOKAL
+        // DI-ROMBAK JUGA AGAR PENGHAPUSAN LOKAL INSTAN
         document.getElementById('confirmDeleteBtn').onclick = function() {
             if (selectedNoToDelete === null) return;
             const no = selectedNoToDelete;
@@ -425,17 +429,22 @@
             cachedGlobalResponse.totalTrades = totalCount;
             cachedGlobalResponse.winRate = totalCount > 0 ? Math.round((wins / totalCount) * 100) : 0;
 
+            // 1. Update UI & Cache seketika
             localStorage.setItem('tradingDataCache', JSON.stringify(cachedGlobalResponse));
             renderDashboard(cachedGlobalResponse);
 
             showToast("Terhapus", "error");
 
-            fetch(`${API_URL}?action=delete&no=${no}`, { mode: 'no-cors' })
-                .catch(err => console.log(err));
+            // 2. Request hapus ke server dilempar ke background
+            setTimeout(() => {
+                fetch(`${API_URL}?action=delete&no=${no}`, { mode: 'no-cors' })
+                    .catch(err => console.log(err));
+            }, 10);
         };
 
         function bindLongPress(element, no) {
             let pressTimer = null;
+
             const startPress = (e) => {
                 if (e.type === 'click') return;
                 pressTimer = setTimeout(() => {
@@ -443,19 +452,24 @@
                     handleHapus(no);
                 }, 500);
             };
+
             const cancelPress = () => {
                 if (pressTimer) {
                     clearTimeout(pressTimer);
                     pressTimer = null;
                 }
             };
+
             element.addEventListener('mousedown', startPress);
             element.addEventListener('touchstart', startPress, { passive: true });
+
             element.addEventListener('mouseup', cancelPress);
             element.addEventListener('mouseleave', cancelPress);
             element.addEventListener('touchend', cancelPress);
             element.addEventListener('touchmove', cancelPress);
-            element.addEventListener('contextmenu', (e) => e.preventDefault());
+            element.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+            });
         }
 
         function renderDashboard(res) {
@@ -592,6 +606,10 @@
 
             countEl.textContent = res.totalTrades || 0;
             winEl.textContent = `${res.winRate || 0}%`;
+        }
+
+        function handleError(err) {
+            console.error(err);
         }
     </script>
 </body>

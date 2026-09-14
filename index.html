@@ -35,7 +35,7 @@
         /* Batasi maksimal 7 baris rekap harian khusus Tampilan HP */
         @media (max-width: 1023px) {
             #dailySummaryList {
-                max-height: 380px; /* Perkiraan tinggi pas untuk 7 baris card rekap */
+                max-height: 380px;
                 overflow-y: auto;
             }
         }
@@ -335,10 +335,8 @@
                     renderDashboard(cachedGlobalResponse);
                 } catch(e) {}
             }
-            loadDataSilent();
-        };
-
-        function loadDataSilent() {
+            
+            // Ambil data terbaru di background
             fetch(API_URL)
                 .then(res => res.json())
                 .then(data => {
@@ -346,8 +344,8 @@
                     localStorage.setItem('tradingDataCache', JSON.stringify(data));
                     renderDashboard(data);
                 })
-                .catch(err => console.log("Background sync silent error", err));
-        }
+                .catch(err => console.log(err));
+        };
 
         function filterByDate(dateStr) {
             selectedFilterDate = dateStr;
@@ -373,7 +371,7 @@
             }).format(amount);
         }
 
-        // OPTIMISTIC UPDATE: 100% INSTAN SEPERTI APLIKASI HUTANG
+        // LOGIKA INSTAN SAMA PERSIS SEPERTI APLIKASI HUTANG
         function handleSubmit(e) {
             e.preventDefault();
             const pairField = document.getElementById('pair');
@@ -387,8 +385,12 @@
             const [y, m, d] = closedVal.split('-');
             const formattedClosedDate = `${d}/${m}/${y}`;
 
+            const maxNo = (cachedGlobalResponse.history && cachedGlobalResponse.history.length > 0) 
+                ? Math.max(...cachedGlobalResponse.history.map(x => parseInt(x.no) || 0)) 
+                : 0;
+
             const newItem = {
-                no: (cachedGlobalResponse.history && cachedGlobalResponse.history.length > 0) ? Math.max(...cachedGlobalResponse.history.map(x => x.no)) + 1 : 1,
+                no: maxNo + 1,
                 pair: pairVal,
                 opened: openedVal,
                 closed: formattedClosedDate,
@@ -408,6 +410,7 @@
             cachedGlobalResponse.totalTrades = cachedGlobalResponse.history.length;
             cachedGlobalResponse.winRate = Math.round((wins / cachedGlobalResponse.totalTrades) * 100);
 
+            // Simpan lokal & langsung render instan detik itu juga
             localStorage.setItem('tradingDataCache', JSON.stringify(cachedGlobalResponse));
             renderDashboard(cachedGlobalResponse);
 
@@ -421,6 +424,7 @@
             const encClosed = encodeURIComponent(closedVal);
             const encPnl = encodeURIComponent(pnlVal);
 
+            // Kirim ke Google Sheet di background
             fetch(`${API_URL}?action=add&pair=${encPair}&opened=${encOpened}&closed=${encClosed}&pnl=${encPnl}`)
                 .then(() => {
                     fetch(API_URL).then(res => res.json()).then(data => {
@@ -443,14 +447,14 @@
             document.getElementById('deleteModal').classList.add('hidden');
         }
 
-        // OPTIMISTIC UPDATE HAPUS: 100% INSTAN
+        // HAPUS INSTAN LOKAL LALU SINKRONISASI DI BACKGROUND
         document.getElementById('confirmDeleteBtn').onclick = function() {
-            if (!selectedNoToDelete) return;
+            if (selectedNoToDelete === null) return;
             const no = selectedNoToDelete;
             closeDeleteModal();
 
             if (cachedGlobalResponse.history) {
-                cachedGlobalResponse.history = cachedGlobalResponse.history.filter(item => item.no !== no);
+                cachedGlobalResponse.history = cachedGlobalResponse.history.filter(item => parseInt(item.no) !== parseInt(no));
             }
 
             let sumPnl = 0;

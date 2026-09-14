@@ -126,43 +126,7 @@
                     <label class="block text-xs font-medium text-slate-400 mb-1.5">Pair / Koin</label>
                     <input type="text" id="pair" list="pairList" required placeholder="Contoh: BTCUSDT" onblur="formatPairInput(this)" class="w-full porto-input rounded-xl px-3.5 py-2.5 uppercase font-medium">
                     <datalist id="pairList">
-                        <option value="ADAUSDT">
-                        <option value="ALGOUSDT">
-                        <option value="APTUSDT">
-                        <option value="ARBUSDT">
-                        <option value="ATOMUSDT">
-                        <option value="AVAXUSDT">
-                        <option value="BCHUSDT">
-                        <option value="BNBUSDT">
-                        <option value="BTCUSDT">
-                        <option value="CLUSDT">
-                        <option value="DOGEUSDT">
-                        <option value="DOTUSDT">
-                        <option value="ETHUSDT">
-                        <option value="FTMUSDT">
-                        <option value="INJUSDT">
-                        <option value="KORUUSDT">
-                        <option value="LINKUSDT">
-                        <option value="TCUSDT">
-                        <option value="LSKUSDT">
-                        <option value="LTCUSDT">
-                        <option value="NEARUSDT">
-                        <option value="OPUSDT">
-                        <option value="PEPEUSDT">
-                        <option value="SEIUSDT">
-                        <option value="SHIBUSDT">
-                        <option value="SKHYNIXUSDT">
-                        <option value="SKHYUSDT">
-                        <option value="SNDKUSDT">
-                        <option value="SOLUSDT">
-                        <option value="SOPHUSDT">
-                        <option value="SUIUSDT">
-                        <option value="TIAUSDT">
-                        <option value="TONUSDT">
-                        <option value="TRXUSDT">
-                        <option value="WIFUSDT">
-                        <option value="XRPUSDT">
-                        <option value="ZECUSDT">
+                        <option value="ADAUSDT"><option value="ALGOUSDT"><option value="APTUSDT"><option value="ARBUSDT"><option value="ATOMUSDT"><option value="AVAXUSDT"><option value="BCHUSDT"><option value="BNBUSDT"><option value="BTCUSDT"><option value="CLUSDT"><option value="DOGEUSDT"><option value="DOTUSDT"><option value="ETHUSDT"><option value="FTMUSDT"><option value="INJUSDT"><option value="KORUUSDT"><option value="LINKUSDT"><option value="TCUSDT"><option value="LSKUSDT"><option value="LTCUSDT"><option value="NEARUSDT"><option value="OPUSDT"><option value="PEPEUSDT"><option value="SEIUSDT"><option value="SHIBUSDT"><option value="SKHYNIXUSDT"><option value="SKHYUSDT"><option value="SNDKUSDT"><option value="SOLUSDT"><option value="SOPHUSDT"><option value="SUIUSDT"><option value="TIAUSDT"><option value="TONUSDT"><option value="TRXUSDT"><option value="WIFUSDT"><option value="XRPUSDT"><option value="ZECUSDT">
                     </datalist>
                 </div>
 
@@ -336,7 +300,7 @@
                 } catch(e) {}
             }
             
-            // Ambil data terbaru di background
+            // Tarik data terbaru di background secara diam-diam
             fetch(API_URL)
                 .then(res => res.json())
                 .then(data => {
@@ -371,7 +335,7 @@
             }).format(amount);
         }
 
-        // LOGIKA INSTAN SAMA PERSIS SEPERTI APLIKASI HUTANG
+        // 100% INSTAN: LANGSUNG MUNCUL TANPA TUNGGU SERVER
         function handleSubmit(e) {
             e.preventDefault();
             const pairField = document.getElementById('pair');
@@ -385,12 +349,12 @@
             const [y, m, d] = closedVal.split('-');
             const formattedClosedDate = `${d}/${m}/${y}`;
 
-            const maxNo = (cachedGlobalResponse.history && cachedGlobalResponse.history.length > 0) 
-                ? Math.max(...cachedGlobalResponse.history.map(x => parseInt(x.no) || 0)) 
-                : 0;
+            const nextNo = (cachedGlobalResponse.history && cachedGlobalResponse.history.length > 0)
+                ? Math.max(...cachedGlobalResponse.history.map(x => parseInt(x.no) || 0)) + 1
+                : 1;
 
             const newItem = {
-                no: maxNo + 1,
+                no: nextNo,
                 pair: pairVal,
                 opened: openedVal,
                 closed: formattedClosedDate,
@@ -410,7 +374,7 @@
             cachedGlobalResponse.totalTrades = cachedGlobalResponse.history.length;
             cachedGlobalResponse.winRate = Math.round((wins / cachedGlobalResponse.totalTrades) * 100);
 
-            // Simpan lokal & langsung render instan detik itu juga
+            // Simpan lokal & render detik itu juga
             localStorage.setItem('tradingDataCache', JSON.stringify(cachedGlobalResponse));
             renderDashboard(cachedGlobalResponse);
 
@@ -419,20 +383,13 @@
             document.getElementById('pair').value = '';
             document.getElementById('pnl').value = '';
 
+            // Kirim ke Google Sheet lewat mode 'no-cors' agar ngebut di background
             const encPair = encodeURIComponent(pairVal);
             const encOpened = encodeURIComponent(openedVal);
             const encClosed = encodeURIComponent(closedVal);
             const encPnl = encodeURIComponent(pnlVal);
 
-            // Kirim ke Google Sheet di background
-            fetch(`${API_URL}?action=add&pair=${encPair}&opened=${encOpened}&closed=${encClosed}&pnl=${encPnl}`)
-                .then(() => {
-                    fetch(API_URL).then(res => res.json()).then(data => {
-                        cachedGlobalResponse = data;
-                        localStorage.setItem('tradingDataCache', JSON.stringify(data));
-                        renderDashboard(data);
-                    }).catch(err => {});
-                })
+            fetch(`${API_URL}?action=add&pair=${encPair}&opened=${encOpened}&closed=${encClosed}&pnl=${encPnl}`, { mode: 'no-cors' })
                 .catch(err => console.log(err));
         }
 
@@ -447,7 +404,7 @@
             document.getElementById('deleteModal').classList.add('hidden');
         }
 
-        // HAPUS INSTAN LOKAL LALU SINKRONISASI DI BACKGROUND
+        // 100% INSTAN HAPUS LOKAL
         document.getElementById('confirmDeleteBtn').onclick = function() {
             if (selectedNoToDelete === null) return;
             const no = selectedNoToDelete;
@@ -473,20 +430,12 @@
 
             showToast("Terhapus", "error");
 
-            fetch(`${API_URL}?action=delete&no=${no}`)
-                .then(() => {
-                    fetch(API_URL).then(res => res.json()).then(data => {
-                        cachedGlobalResponse = data;
-                        localStorage.setItem('tradingDataCache', JSON.stringify(data));
-                        renderDashboard(data);
-                    }).catch(err => {});
-                })
+            fetch(`${API_URL}?action=delete&no=${no}`, { mode: 'no-cors' })
                 .catch(err => console.log(err));
         };
 
         function bindLongPress(element, no) {
             let pressTimer = null;
-
             const startPress = (e) => {
                 if (e.type === 'click') return;
                 pressTimer = setTimeout(() => {
@@ -494,24 +443,19 @@
                     handleHapus(no);
                 }, 500);
             };
-
             const cancelPress = () => {
                 if (pressTimer) {
                     clearTimeout(pressTimer);
                     pressTimer = null;
                 }
             };
-
             element.addEventListener('mousedown', startPress);
             element.addEventListener('touchstart', startPress, { passive: true });
-
             element.addEventListener('mouseup', cancelPress);
             element.addEventListener('mouseleave', cancelPress);
             element.addEventListener('touchend', cancelPress);
             element.addEventListener('touchmove', cancelPress);
-            element.addEventListener('contextmenu', (e) => {
-                e.preventDefault();
-            });
+            element.addEventListener('contextmenu', (e) => e.preventDefault());
         }
 
         function renderDashboard(res) {
@@ -648,10 +592,6 @@
 
             countEl.textContent = res.totalTrades || 0;
             winEl.textContent = `${res.winRate || 0}%`;
-        }
-
-        function handleError(err) {
-            console.error(err);
         }
     </script>
 </body>

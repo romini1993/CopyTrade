@@ -126,7 +126,43 @@
                     <label class="block text-xs font-medium text-slate-400 mb-1.5">Pair / Koin</label>
                     <input type="text" id="pair" list="pairList" required placeholder="Contoh: BTCUSDT" onblur="formatPairInput(this)" class="w-full porto-input rounded-xl px-3.5 py-2.5 uppercase font-medium">
                     <datalist id="pairList">
-                        <option value="ADAUSDT"><option value="ALGOUSDT"><option value="APTUSDT"><option value="ARBUSDT"><option value="ATOMUSDT"><option value="AVAXUSDT"><option value="BCHUSDT"><option value="BNBUSDT"><option value="BTCUSDT"><option value="CLUSDT"><option value="DOGEUSDT"><option value="DOTUSDT"><option value="ETHUSDT"><option value="FTMUSDT"><option value="INJUSDT"><option value="KORUUSDT"><option value="LINKUSDT"><option value="TCUSDT"><option value="LSKUSDT"><option value="LTCUSDT"><option value="NEARUSDT"><option value="OPUSDT"><option value="PEPEUSDT"><option value="SEIUSDT"><option value="SHIBUSDT"><option value="SKHYNIXUSDT"><option value="SKHYUSDT"><option value="SNDKUSDT"><option value="SOLUSDT"><option value="SOPHUSDT"><option value="SUIUSDT"><option value="TIAUSDT"><option value="TONUSDT"><option value="TRXUSDT"><option value="WIFUSDT"><option value="XRPUSDT"><option value="ZECUSDT">
+                        <option value="ADAUSDT">
+                        <option value="ALGOUSDT">
+                        <option value="APTUSDT">
+                        <option value="ARBUSDT">
+                        <option value="ATOMUSDT">
+                        <option value="AVAXUSDT">
+                        <option value="BCHUSDT">
+                        <option value="BNBUSDT">
+                        <option value="BTCUSDT">
+                        <option value="CLUSDT">
+                        <option value="DOGEUSDT">
+                        <option value="DOTUSDT">
+                        <option value="ETHUSDT">
+                        <option value="FTMUSDT">
+                        <option value="INJUSDT">
+                        <option value="KORUUSDT">
+                        <option value="LINKUSDT">
+                        <option value="TCUSDT">
+                        <option value="LSKUSDT">
+                        <option value="LTCUSDT">
+                        <option value="NEARUSDT">
+                        <option value="OPUSDT">
+                        <option value="PEPEUSDT">
+                        <option value="SEIUSDT">
+                        <option value="SHIBUSDT">
+                        <option value="SKHYNIXUSDT">
+                        <option value="SKHYUSDT">
+                        <option value="SNDKUSDT">
+                        <option value="SOLUSDT">
+                        <option value="SOPHUSDT">
+                        <option value="SUIUSDT">
+                        <option value="TIAUSDT">
+                        <option value="TONUSDT">
+                        <option value="TRXUSDT">
+                        <option value="WIFUSDT">
+                        <option value="XRPUSDT">
+                        <option value="ZECUSDT">
                     </datalist>
                 </div>
 
@@ -300,17 +336,15 @@
                 } catch(e) {}
             }
             
-            // Sinkronisasi senyap di background setelah halaman siap
-            setTimeout(() => {
-                fetch(API_URL)
-                    .then(res => res.json())
-                    .then(data => {
-                        cachedGlobalResponse = data;
-                        localStorage.setItem('tradingDataCache', JSON.stringify(data));
-                        renderDashboard(data);
-                    })
-                    .catch(err => console.log(err));
-            }, 100);
+            // Ambil data terbaru di background
+            fetch(API_URL)
+                .then(res => res.json())
+                .then(data => {
+                    cachedGlobalResponse = data;
+                    localStorage.setItem('tradingDataCache', JSON.stringify(data));
+                    renderDashboard(data);
+                })
+                .catch(err => console.log(err));
         };
 
         function filterByDate(dateStr) {
@@ -337,7 +371,7 @@
             }).format(amount);
         }
 
-        // DI-ROMBAK AGAR BENAR-BENAR INSTAN TANPA TAHANAN JARINGAN
+        // LOGIKA INSTAN SAMA PERSIS SEPERTI APLIKASI HUTANG
         function handleSubmit(e) {
             e.preventDefault();
             const pairField = document.getElementById('pair');
@@ -351,12 +385,12 @@
             const [y, m, d] = closedVal.split('-');
             const formattedClosedDate = `${d}/${m}/${y}`;
 
-            const nextNo = (cachedGlobalResponse.history && cachedGlobalResponse.history.length > 0)
-                ? Math.max(...cachedGlobalResponse.history.map(x => parseInt(x.no) || 0)) + 1
-                : 1;
+            const maxNo = (cachedGlobalResponse.history && cachedGlobalResponse.history.length > 0) 
+                ? Math.max(...cachedGlobalResponse.history.map(x => parseInt(x.no) || 0)) 
+                : 0;
 
             const newItem = {
-                no: nextNo,
+                no: maxNo + 1,
                 pair: pairVal,
                 opened: openedVal,
                 closed: formattedClosedDate,
@@ -376,7 +410,7 @@
             cachedGlobalResponse.totalTrades = cachedGlobalResponse.history.length;
             cachedGlobalResponse.winRate = Math.round((wins / cachedGlobalResponse.totalTrades) * 100);
 
-            // 1. Eksekusi render UI & simpan cache secara instan detik itu juga
+            // Simpan lokal & langsung render instan detik itu juga
             localStorage.setItem('tradingDataCache', JSON.stringify(cachedGlobalResponse));
             renderDashboard(cachedGlobalResponse);
 
@@ -385,16 +419,21 @@
             document.getElementById('pair').value = '';
             document.getElementById('pnl').value = '';
 
-            // 2. Kirim data ke Google Sheet dipisah ke antrean background lewat setTimeout
-            setTimeout(() => {
-                const encPair = encodeURIComponent(pairVal);
-                const encOpened = encodeURIComponent(openedVal);
-                const encClosed = encodeURIComponent(closedVal);
-                const encPnl = encodeURIComponent(pnlVal);
+            const encPair = encodeURIComponent(pairVal);
+            const encOpened = encodeURIComponent(openedVal);
+            const encClosed = encodeURIComponent(closedVal);
+            const encPnl = encodeURIComponent(pnlVal);
 
-                fetch(`${API_URL}?action=add&pair=${encPair}&opened=${encOpened}&closed=${encClosed}&pnl=${encPnl}`, { mode: 'no-cors' })
-                    .catch(err => console.log(err));
-            }, 10);
+            // Kirim ke Google Sheet di background
+            fetch(`${API_URL}?action=add&pair=${encPair}&opened=${encOpened}&closed=${encClosed}&pnl=${encPnl}`)
+                .then(() => {
+                    fetch(API_URL).then(res => res.json()).then(data => {
+                        cachedGlobalResponse = data;
+                        localStorage.setItem('tradingDataCache', JSON.stringify(data));
+                        renderDashboard(data);
+                    }).catch(err => {});
+                })
+                .catch(err => console.log(err));
         }
 
         function handleHapus(no) {
@@ -408,7 +447,7 @@
             document.getElementById('deleteModal').classList.add('hidden');
         }
 
-        // DI-ROMBAK JUGA AGAR PENGHAPUSAN LOKAL INSTAN
+        // HAPUS INSTAN LOKAL LALU SINKRONISASI DI BACKGROUND
         document.getElementById('confirmDeleteBtn').onclick = function() {
             if (selectedNoToDelete === null) return;
             const no = selectedNoToDelete;
@@ -429,17 +468,20 @@
             cachedGlobalResponse.totalTrades = totalCount;
             cachedGlobalResponse.winRate = totalCount > 0 ? Math.round((wins / totalCount) * 100) : 0;
 
-            // 1. Update UI & Cache seketika
             localStorage.setItem('tradingDataCache', JSON.stringify(cachedGlobalResponse));
             renderDashboard(cachedGlobalResponse);
 
             showToast("Terhapus", "error");
 
-            // 2. Request hapus ke server dilempar ke background
-            setTimeout(() => {
-                fetch(`${API_URL}?action=delete&no=${no}`, { mode: 'no-cors' })
-                    .catch(err => console.log(err));
-            }, 10);
+            fetch(`${API_URL}?action=delete&no=${no}`)
+                .then(() => {
+                    fetch(API_URL).then(res => res.json()).then(data => {
+                        cachedGlobalResponse = data;
+                        localStorage.setItem('tradingDataCache', JSON.stringify(data));
+                        renderDashboard(data);
+                    }).catch(err => {});
+                })
+                .catch(err => console.log(err));
         };
 
         function bindLongPress(element, no) {

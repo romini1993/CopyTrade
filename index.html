@@ -522,7 +522,7 @@
                 return;
             }
 
-            // Render Rekap Harian (Dilengkapi Interaktif Klik)
+            // Render Rekap Harian
             const dailyMap = {};
             data.forEach(item => {
                 const closedDate = item.closed;
@@ -587,7 +587,7 @@
                 return;
             }
 
-            // Render Riwayat Trade
+            // Render Riwayat Trade (Format #no • tanggal)
             filteredData.forEach((item, i) => {
                 const pnlNum = parseFloat(item.pnl) || 0;
                 const isProfit = pnlNum >= 0;
@@ -599,16 +599,16 @@
                 div.className = `rise-in p-2.5 sm:p-3 rounded-xl border ${bgCard} flex items-center justify-between hover:border-slate-700 transition gap-1.5 cursor-pointer select-none`;
                 div.style.animationDelay = `${i * 15}ms`;
                 div.innerHTML = `
-                    <div class="w-[35%] min-w-0 text-left">
+                    <div class="w-[38%] min-w-0 text-left">
                         <div class="text-[11px] sm:text-xs text-slate-300 font-medium truncate">
-                            <span class="text-indigo-400 font-bold mr-0.5">#${item.no}</span>${item.closed}
+                            <span class="text-indigo-400 font-bold">#${item.no}</span> • <span class="text-slate-200">${item.closed}</span>
                         </div>
                         <div class="text-[9px] sm:text-[10px] font-semibold ${isProfit ? 'text-emerald-500' : 'text-rose-500'} uppercase mt-0.5">${isProfit ? 'PROFIT' : 'LOSS'}</div>
                     </div>
-                    <div class="w-[30%] text-center px-1">
+                    <div class="w-[28%] text-center px-1">
                         <div class="font-display font-bold text-xs sm:text-sm text-white truncate">${item.pair}</div>
                     </div>
-                    <div class="w-[35%] text-right min-w-0">
+                    <div class="w-[34%] text-right min-w-0">
                         <div class="num font-bold text-xs sm:text-sm ${pnlColor} whitespace-nowrap">${isProfit ? '+' : ''}${pnlNum.toFixed(2)} USDT</div>
                         <div class="text-[9px] sm:text-[10px] text-slate-400 font-medium num mt-0.5 whitespace-nowrap">${totalIdr}</div>
                     </div>

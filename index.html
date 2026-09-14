@@ -295,7 +295,6 @@
             }
         });
 
-        // Otomatis Tambah USDT di Pair saat input kehilangan fokus
         function formatPairInput(input) {
             let val = input.value.trim().toUpperCase();
             if (val && !val.includes("USDT")) {
@@ -336,13 +335,11 @@
                     renderDashboard(cachedGlobalResponse);
                 } catch(e) {}
             }
-            loadData();
+            loadDataSilent(); // Pakai silent load agar tidak mengganggu tampilan
         };
 
-        function loadData() {
-            if (!localStorage.getItem('tradingDataCache')) {
-                document.getElementById('loading').style.display = 'block';
-            }
+        // Load data di background tanpa memicu loading bar
+        function loadDataSilent() {
             fetch(API_URL)
                 .then(res => res.json())
                 .then(data => {
@@ -350,7 +347,7 @@
                     localStorage.setItem('tradingDataCache', JSON.stringify(data));
                     renderDashboard(data);
                 })
-                .catch(err => handleError(err));
+                .catch(err => console.log("Background sync silent error", err));
         }
 
         function filterByDate(dateStr) {
@@ -377,7 +374,7 @@
             }).format(amount);
         }
 
-        // OPTIMISTIC UPDATE: SIMPAN DATA INSTAN TANPA TUNGGU LOADING
+        // OPTIMISTIC UPDATE: 100% INSTAN TANPA LOAD ULANG
         function handleSubmit(e) {
             e.preventDefault();
             const pairField = document.getElementById('pair');
@@ -427,11 +424,8 @@
 
             const sendUrl = `${API_URL}?action=add&pair=${pair}&opened=${opened}&closed=${closed}&pnl=${pnl}`;
 
-            fetch(sendUrl, { mode: 'no-cors' })
-                .then(() => {
-                    setTimeout(() => loadData(), 500);
-                })
-                .catch(err => console.error("Sync background error", err));
+            // Kirim ke sheet di background tanpa memicu load ulang aplikasi
+            fetch(sendUrl, { mode: 'no-cors' }).catch(err => console.error("Sync background error", err));
         }
 
         function handleHapus(no) {
@@ -445,7 +439,7 @@
             document.getElementById('deleteModal').classList.add('hidden');
         }
 
-        // OPTIMISTIC UPDATE: HAPUS DATA INSTAN TANPA TUNGGU LOADING
+        // OPTIMISTIC UPDATE HAPUS: 100% INSTAN TANPA LOAD ULANG
         document.getElementById('confirmDeleteBtn').onclick = function() {
             if (!selectedNoToDelete) return;
             const no = selectedNoToDelete;
@@ -472,11 +466,8 @@
             showToast("Terhapus", "error");
 
             const deleteUrl = `${API_URL}?action=delete&no=${no}`;
-            fetch(deleteUrl, { mode: 'no-cors' })
-                .then(() => {
-                    setTimeout(() => loadData(), 500);
-                })
-                .catch(err => console.error("Delete background error", err));
+            // Kirim perintah hapus ke sheet di background tanpa load ulang
+            fetch(deleteUrl, { mode: 'no-cors' }).catch(err => console.error("Delete background error", err));
         };
 
         function bindLongPress(element, no) {
@@ -571,7 +562,7 @@
                         <div class="num font-bold text-xs sm:text-sm ${color} whitespace-nowrap">
                             ${isProf ? '+' : ''}${summary.total.toFixed(2)} USDT
                         </div>
-                        <div class="text-[9px] sm:text-[10px] text-slate-400 font-medium num mt-0.5 whitespace-nowrap">
+                        <div class="num text-[9px] sm:text-[10px] text-slate-400 font-medium num mt-0.5 whitespace-nowrap">
                             ${totalIdr}
                         </div>
                     </div>
@@ -618,7 +609,7 @@
                     </div>
                     <div class="w-[34%] text-right min-w-0">
                         <div class="num font-bold text-xs sm:text-sm ${pnlColor} whitespace-nowrap">${isProfit ? '+' : ''}${pnlNum.toFixed(2)} USDT</div>
-                        <div class="text-[9px] sm:text-[10px] text-slate-400 font-medium num mt-0.5 whitespace-nowrap">${totalIdr}</div>
+                        <div class="num text-[9px] sm:text-[10px] text-slate-400 font-medium num mt-0.5 whitespace-nowrap">${totalIdr}</div>
                     </div>
                 `;
 

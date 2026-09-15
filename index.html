@@ -336,7 +336,7 @@
                 } catch(e) {}
             }
             
-            // Ambil data terbaru di background
+            // Ambil data terbaru di background secara senyap
             fetch(API_URL)
                 .then(res => res.json())
                 .then(data => {
@@ -371,7 +371,7 @@
             }).format(amount);
         }
 
-        // LOGIKA OPTIMISTIC UI (INSTAN DULU DI PWA, SINKRON KE SHEET DI BACKGROUND)
+        // LOGIKA INSTAN 100% SEPERTI PWA HUTANG (OPTIMISTIC UI)
         function handleSubmit(e) {
             e.preventDefault();
             const pairField = document.getElementById('pair');
@@ -398,7 +398,6 @@
             };
 
             if (!cachedGlobalResponse.history) cachedGlobalResponse.history = [];
-            // Unshift atau Push? PWA hutang biasanya nambah data baru
             cachedGlobalResponse.history.push(newItem);
 
             let sumPnl = 0;
@@ -411,7 +410,7 @@
             cachedGlobalResponse.totalTrades = cachedGlobalResponse.history.length;
             cachedGlobalResponse.winRate = Math.round((wins / cachedGlobalResponse.totalTrades) * 100);
 
-            // 1. Simpan ke LocalStorage & Render Instan Detik Ini Juga (Sat-set!)
+            // Simpan lokal & render instan detik itu juga tanpa jeda
             localStorage.setItem('tradingDataCache', JSON.stringify(cachedGlobalResponse));
             renderDashboard(cachedGlobalResponse);
 
@@ -425,16 +424,9 @@
             const encClosed = encodeURIComponent(closedVal);
             const encPnl = encodeURIComponent(pnlVal);
 
-            // 2. Tembak ke Google Sheet secara senyap di background
+            // Kirim ke Google Sheet di background secara diam-diam (tanpa fetch balik yang bikin lemot)
             fetch(`${API_URL}?action=add&pair=${encPair}&opened=${encOpened}&closed=${encClosed}&pnl=${encPnl}`)
-                .then(() => {
-                    fetch(API_URL).then(res => res.json()).then(data => {
-                        cachedGlobalResponse = data;
-                        localStorage.setItem('tradingDataCache', JSON.stringify(data));
-                        renderDashboard(data);
-                    }).catch(err => {});
-                })
-                .catch(err => console.log(err));
+                .catch(err => console.log("Background sync error:", err));
         }
 
         function handleHapus(no) {
@@ -448,7 +440,7 @@
             document.getElementById('deleteModal').classList.add('hidden');
         }
 
-        // HAPUS INSTAN LOKAL, SINKRON DI BACKGROUND
+        // HAPUS INSTAN LOKAL, SINKRON DI BACKGROUND TANPA NUNGGU
         document.getElementById('confirmDeleteBtn').onclick = function() {
             if (selectedNoToDelete === null) return;
             const no = selectedNoToDelete;
@@ -475,14 +467,7 @@
             showToast("Terhapus", "error");
 
             fetch(`${API_URL}?action=delete&no=${no}`)
-                .then(() => {
-                    fetch(API_URL).then(res => res.json()).then(data => {
-                        cachedGlobalResponse = data;
-                        localStorage.setItem('tradingDataCache', JSON.stringify(data));
-                        renderDashboard(data);
-                    }).catch(err => {});
-                })
-                .catch(err => console.log(err));
+                .catch(err => console.log("Background delete error:", err));
         };
 
         function bindLongPress(element, no) {

@@ -371,7 +371,7 @@
             }).format(amount);
         }
 
-        // LOGIKA INSTAN SAMA PERSIS SEPERTI APLIKASI HUTANG
+        // LOGIKA OPTIMISTIC UI (INSTAN DULU DI PWA, SINKRON KE SHEET DI BACKGROUND)
         function handleSubmit(e) {
             e.preventDefault();
             const pairField = document.getElementById('pair');
@@ -398,6 +398,7 @@
             };
 
             if (!cachedGlobalResponse.history) cachedGlobalResponse.history = [];
+            // Unshift atau Push? PWA hutang biasanya nambah data baru
             cachedGlobalResponse.history.push(newItem);
 
             let sumPnl = 0;
@@ -410,7 +411,7 @@
             cachedGlobalResponse.totalTrades = cachedGlobalResponse.history.length;
             cachedGlobalResponse.winRate = Math.round((wins / cachedGlobalResponse.totalTrades) * 100);
 
-            // Simpan lokal & langsung render instan detik itu juga
+            // 1. Simpan ke LocalStorage & Render Instan Detik Ini Juga (Sat-set!)
             localStorage.setItem('tradingDataCache', JSON.stringify(cachedGlobalResponse));
             renderDashboard(cachedGlobalResponse);
 
@@ -424,7 +425,7 @@
             const encClosed = encodeURIComponent(closedVal);
             const encPnl = encodeURIComponent(pnlVal);
 
-            // Kirim ke Google Sheet di background
+            // 2. Tembak ke Google Sheet secara senyap di background
             fetch(`${API_URL}?action=add&pair=${encPair}&opened=${encOpened}&closed=${encClosed}&pnl=${encPnl}`)
                 .then(() => {
                     fetch(API_URL).then(res => res.json()).then(data => {
@@ -447,7 +448,7 @@
             document.getElementById('deleteModal').classList.add('hidden');
         }
 
-        // HAPUS INSTAN LOKAL LALU SINKRONISASI DI BACKGROUND
+        // HAPUS INSTAN LOKAL, SINKRON DI BACKGROUND
         document.getElementById('confirmDeleteBtn').onclick = function() {
             if (selectedNoToDelete === null) return;
             const no = selectedNoToDelete;
@@ -648,10 +649,6 @@
 
             countEl.textContent = res.totalTrades || 0;
             winEl.textContent = `${res.winRate || 0}%`;
-        }
-
-        function handleError(err) {
-            console.error(err);
         }
     </script>
 </body>

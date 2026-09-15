@@ -80,12 +80,11 @@
 
     <div class="w-full max-w-[1600px] grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
 
+        <!-- KOLOM 1: Form Input -->
         <div class="lg:col-span-4 xl:col-span-4 space-y-5 lg:sticky lg:top-6">
             <div class="porto-card px-4 py-3 rounded-xl flex items-center justify-between border-l-4 border-l-indigo-500">
                 <div class="flex items-center gap-2.5">
-                    <div class="w-8 h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400 font-display text-base font-bold">
-                        ⚡
-                    </div>
+                    <div class="w-8 h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400 font-display text-base font-bold">⚡</div>
                     <div>
                         <h1 class="font-display text-base font-bold tracking-tight text-white leading-none">TRADING LOG</h1>
                         <p class="text-[10px] text-slate-400 mt-0.5">Jurnal Presisi & Rekap Otomatis</p>
@@ -142,6 +141,7 @@
             </form>
         </div>
 
+        <!-- KOLOM 2: Rekap Harian -->
         <div class="lg:col-span-4 xl:col-span-4 space-y-4 lg:sticky lg:top-6">
             <div class="porto-card p-4 sm:p-5 rounded-2xl space-y-3">
                 <div class="flex justify-between items-center mb-1">
@@ -152,6 +152,7 @@
             </div>
         </div>
 
+        <!-- KOLOM 3: Riwayat Trade -->
         <div class="lg:col-span-4 xl:col-span-4 space-y-4 lg:sticky lg:top-6">
             <div class="porto-card p-4 sm:p-5 rounded-2xl space-y-3">
                 <div class="flex justify-between items-center mb-1">
@@ -166,6 +167,7 @@
 
     </div>
 
+    <!-- MODAL HAPUS -->
     <div id="deleteModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
         <div class="porto-card w-full max-w-sm p-6 rounded-2xl border border-rose-500/30 shadow-2xl space-y-4 rise-in text-center relative">
             <div class="w-12 h-12 rounded-full bg-rose-500/10 border border-rose-500/30 text-rose-400 flex items-center justify-center text-xl font-bold mx-auto">⚠️</div>
@@ -180,13 +182,14 @@
         </div>
     </div>
 
+    <!-- TOAST -->
     <div id="toast" class="px-5 py-3 rounded-2xl text-xs font-semibold shadow-2xl backdrop-blur-md border flex items-center gap-2">
         <span id="toastIcon"></span>
         <span id="toastText"></span>
     </div>
 
     <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbwZGisAH5tq8ThZ-N8ixzLuxsTuV74je5ijw7DJE6p5xt_NkGn0MOuvd34NjuqEkQf9/exec"; // Ganti dengan URL deployment Web App lu
+        const API_URL = "https://script.google.com/macros/s/AKfycbwZGisAH5tq8ThZ-N8ixzLuxsTuV74je5ijw7DJE6p5xt_NkGn0MOuvd34NjuqEkQf9/exec"; 
         let currentKursIdr = 17550;
         let selectedNoToDelete = null;
         let selectedFilterDate = null;
@@ -232,6 +235,7 @@
             toastTimeout = setTimeout(() => toast.classList.remove('show'), 1800);
         }
 
+        // LOAD DATA AMAN (MENGGUNAKAN GET PARAMETER BIAR PASTI KETARIK)
         window.onload = function() {
             fetchRealtimeKurs();
             const cachedData = localStorage.getItem('tradingDataCache');
@@ -241,6 +245,7 @@
                     renderDashboard(cachedGlobalResponse);
                 } catch(e) {}
             }
+            
             fetch(API_URL)
                 .then(res => res.json())
                 .then(data => {
@@ -250,7 +255,7 @@
                         renderDashboard(data);
                     }
                 })
-                .catch(err => {});
+                .catch(err => console.log("Gagal load data:", err));
         };
 
         function filterByDate(dateStr) {
@@ -273,7 +278,7 @@
             return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(amount);
         }
 
-        // METODE POST MURNI SEPERTI APLIKASI HUTANG
+        // SUBMIT AMAN MENGGUNAKAN GET URL PARAMETER SUPAYA KONEKSI KE SHEET STABIL
         function handleSubmit(e) {
             e.preventDefault();
             const pairField = document.getElementById('pair');
@@ -312,6 +317,7 @@
             cachedGlobalResponse.totalTrades = cachedGlobalResponse.history.length;
             cachedGlobalResponse.winRate = Math.round((wins / cachedGlobalResponse.totalTrades) * 100);
 
+            // Simpan & Render Lokal Instan
             localStorage.setItem('tradingDataCache', JSON.stringify(cachedGlobalResponse));
             renderDashboard(cachedGlobalResponse);
             showToast("Tersimpan", "success");
@@ -319,11 +325,14 @@
             document.getElementById('pair').value = '';
             document.getElementById('pnl').value = '';
 
-            // Kirim POST ke Apps Script di background
-            fetch(API_URL, {
-                method: 'POST',
-                body: JSON.stringify({ action: 'add', pair: pairVal, opened: openedVal, closed: formattedClosedDate, pnl: pnlVal })
-            }).catch(err => {});
+            const encPair = encodeURIComponent(pairVal);
+            const encOpened = encodeURIComponent(openedVal);
+            const encClosed = encodeURIComponent(formattedClosedDate);
+            const encPnl = encodeURIComponent(pnlVal);
+
+            // Kirim ke Google Sheet via GET URL (Paling stabil tanpa kendala CORS/POST Apps Script)
+            fetch(`${API_URL}?action=add&pair=${encPair}&opened=${encOpened}&closed=${encClosed}&pnl=${encPnl}`)
+                .catch(err => console.log("Background sync error:", err));
         }
 
         function handleHapus(no) {
@@ -361,10 +370,8 @@
             renderDashboard(cachedGlobalResponse);
             showToast("Terhapus", "error");
 
-            fetch(API_URL, {
-                method: 'POST',
-                body: JSON.stringify({ action: 'delete', no: no })
-            }).catch(err => {});
+            fetch(`${API_URL}?action=delete&no=${no}`)
+                .catch(err => console.log("Background delete error:", err));
         };
 
         function bindLongPress(element, no) {
@@ -477,7 +484,7 @@
                     </div>
                 `;
                 bindLongPress(div, item.no);
-                tradeContainer.appendChild(div);
+    í           tradeContainer.appendChild(div);
             });
         }
 

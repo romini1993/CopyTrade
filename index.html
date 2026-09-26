@@ -251,7 +251,148 @@
         .font-card {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
         }
-    </style>
+    
+<style>
+/* ===== PROFESSIONAL P&L HERO — visual upgrade only ===== */
+.hero-panel {
+    position: relative;
+    overflow: hidden;
+    background:
+        radial-gradient(circle at 88% 8%, rgba(217,164,65,.13), transparent 30%),
+        linear-gradient(145deg, #121722 0%, #0d1017 58%, #0a0d13 100%);
+    border: 1px solid rgba(217,164,65,.20) !important;
+    box-shadow:
+        0 18px 45px rgba(0,0,0,.42),
+        inset 0 1px 0 rgba(255,255,255,.055);
+}
+
+.hero-panel::before {
+    background:
+        linear-gradient(135deg, rgba(217,164,65,.10), transparent 42%),
+        linear-gradient(315deg, rgba(52,211,153,.035), transparent 38%);
+}
+
+.hero-panel::after {
+    content: "";
+    position: absolute;
+    left: 18px;
+    right: 18px;
+    top: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(240,189,99,.75), transparent);
+    opacity: .7;
+    pointer-events: none;
+}
+
+.hero-panel > .relative:first-child {
+    padding-bottom: 2px;
+}
+
+.hero-panel #totalPnlLabel {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    color: #9aa3b5 !important;
+    letter-spacing: .12em !important;
+    text-transform: uppercase;
+}
+
+.hero-panel #totalPnlLabel::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
+    background: var(--accent-bright);
+    box-shadow: 0 0 10px rgba(240,189,99,.45);
+}
+
+.hero-panel #statTotal {
+    margin-top: 7px;
+    font-size: clamp(2rem, 5vw, 3rem) !important;
+    letter-spacing: -.045em;
+    line-height: .98 !important;
+    text-shadow: 0 5px 24px rgba(0,0,0,.35);
+}
+
+.hero-panel #statTotalIdr {
+    display: inline-flex;
+    align-items: center;
+    margin-top: 9px !important;
+    padding: 4px 8px;
+    border-radius: 8px;
+    background: rgba(255,255,255,.045);
+    border: 1px solid rgba(255,255,255,.065);
+    color: #9aa3b5 !important;
+}
+
+.hero-panel .flex.lg\:hidden.xl\:flex {
+    padding-top: 3px;
+}
+
+.hero-panel .flex.lg\:hidden.xl\:flex > div {
+    padding-left: 10px;
+    border-left: 1px solid rgba(255,255,255,.075);
+}
+
+.hero-panel .flex.lg\:hidden.xl\:flex > div:first-child {
+    border-left: 0;
+}
+
+.hero-panel .flex.lg\:hidden.xl\:flex > div > div:first-child {
+    color: #687286 !important;
+    font-size: 9px !important;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.hero-panel .flex.lg\:hidden.xl\:flex > div > div:last-child {
+    margin-top: 4px;
+    color: #e7eaf1 !important;
+}
+
+.hero-panel #equityCurve {
+    margin-top: 10px;
+    height: 78px !important;
+    border-radius: 14px;
+    background: linear-gradient(
+        180deg,
+        rgba(255,255,255,.025),
+        rgba(255,255,255,0)
+    );
+    border: 1px solid rgba(255,255,255,.045);
+    padding: 4px;
+}
+
+/* Make the whole hero feel more intentional on mobile */
+@media (max-width: 767px) {
+    .hero-panel {
+        border-radius: 22px !important;
+        padding: 16px !important;
+    }
+
+    .hero-panel #statTotal {
+        font-size: 1.85rem !important;
+    }
+
+    .hero-panel #equityCurve {
+        height: 74px !important;
+    }
+}
+
+/* Keep the existing dynamic profit/loss colors intact */
+.hero-panel #statTotal.text-emerald-400,
+.hero-panel #statTotal.text-emerald-500 {
+    color: #34d399 !important;
+}
+
+.hero-panel #statTotal.text-rose-400,
+.hero-panel #statTotal.text-rose-500 {
+    color: #fb7185 !important;
+}
+</style>
+
+</style>
 </head>
 <body class="relative">
     <div class="bg-glow"></div>
@@ -507,7 +648,7 @@
     <div id="resultCardModal" onclick="if(event.target===this) closeResultCardModal()" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
         <div class="space-y-3 rise-in" style="width: min(640px, 100%);">
             <div id="resultCardPreview" class="rounded-3xl p-5 sm:p-6 relative overflow-hidden font-card bg-cover bg-center" style="aspect-ratio: 1200 / 750; border: 1px solid var(--border);">
-                <div class="max-w-[48%]">
+                <div class="max-w-[55%]">
                     <div class="flex items-center gap-2 mb-4">
                         <div class="logo-mark w-9 h-9 text-base">📈</div>
                         <div>
@@ -515,21 +656,21 @@
                             <div id="resultCardDate" class="text-[10px] text-[var(--text-faint)] mt-1">–</div>
                         </div>
                     </div>
-                    <div class="text-[10px] font-semibold tracking-wide text-[var(--text-faint)] mb-1 uppercase" id="resultCardLabel">Total P&amp;L</div>
-                    <div id="resultCardTotal" class="text-3xl sm:text-4xl font-bold leading-none mb-1">–</div>
-                    <div id="resultCardTotalIdr" class="text-sm text-[var(--text-dim)] mb-4">–</div>
-                    <div class="grid grid-cols-3 gap-1.5">
-                        <div class="text-center p-2 rounded-xl bg-white/5 border border-white/10">
-                            <div class="text-[8px] text-[var(--text-faint)] mb-1">Trades</div>
-                            <div id="resultCardCount" class="text-xs sm:text-sm font-bold text-white">–</div>
+                    <div class="text-xs sm:text-sm font-semibold tracking-wide text-[var(--text-faint)] mb-1 uppercase" id="resultCardLabel">Total P&amp;L</div>
+                    <div id="resultCardTotal" class="text-4xl sm:text-5xl font-bold leading-none mb-1">–</div>
+                    <div id="resultCardTotalIdr" class="text-base sm:text-lg text-[var(--text-dim)] mb-7">–</div>
+                    <div class="grid grid-cols-3 gap-1">
+                        <div class="text-center p-1.5 sm:p-2 rounded-xl bg-white/5 border border-white/10">
+                            <div class="text-[9px] sm:text-[10px] text-[var(--text-faint)] mb-1">Trades</div>
+                            <div id="resultCardCount" class="text-sm sm:text-base font-bold text-white">–</div>
                         </div>
-                        <div class="text-center p-2 rounded-xl bg-white/5 border border-white/10">
-                            <div class="text-[8px] text-[var(--text-faint)] mb-1">Win rate</div>
-                            <div id="resultCardWinRate" class="text-xs sm:text-sm font-bold text-white">–</div>
+                        <div class="text-center p-1.5 sm:p-2 rounded-xl bg-white/5 border border-white/10">
+                            <div class="text-[9px] sm:text-[10px] text-[var(--text-faint)] mb-1">Win rate</div>
+                            <div id="resultCardWinRate" class="text-sm sm:text-base font-bold text-white">–</div>
                         </div>
-                        <div class="text-center p-2 rounded-xl bg-white/5 border border-white/10">
-                            <div class="text-[8px] text-[var(--text-faint)] mb-1">Avg Harian</div>
-                            <div id="resultCardAvgDaily" class="text-xs sm:text-sm font-bold text-white">–</div>
+                        <div class="text-center p-1.5 sm:p-2 rounded-xl bg-white/5 border border-white/10">
+                            <div class="text-[9px] sm:text-[10px] text-[var(--text-faint)] mb-1">Avg Harian</div>
+                            <div id="resultCardAvgDaily" class="text-sm sm:text-base font-bold text-white">–</div>
                         </div>
                     </div>
                 </div>
@@ -549,7 +690,7 @@
     <div id="tradeShareModal" onclick="if(event.target===this) closeTradeShareModal()" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
         <div class="space-y-3 rise-in" style="width: min(640px, 100%);">
             <div id="tradeSharePreview" class="rounded-3xl p-5 sm:p-6 relative overflow-hidden font-card bg-cover bg-center" style="aspect-ratio: 1200 / 750; border: 1px solid var(--border);">
-                <div class="max-w-[48%]">
+                <div class="max-w-[55%]">
                     <div class="flex items-center justify-between mb-4">
                         <div class="flex items-center gap-2">
                             <div class="logo-mark w-8 h-8 text-sm">📈</div>
@@ -558,12 +699,12 @@
                         <div id="tradeShareBadge" class="text-[10px] font-bold uppercase px-2.5 py-1 rounded-full">–</div>
                     </div>
                     <div id="tradeSharePair" class="text-xl sm:text-2xl font-bold text-white mb-3">–</div>
-                    <div class="text-[10px] font-semibold tracking-wide text-[var(--text-faint)] mb-1 uppercase">Closing P&amp;L</div>
-                    <div id="tradeShareTotal" class="text-3xl sm:text-4xl font-bold leading-none mb-1">–</div>
-                    <div id="tradeShareTotalIdr" class="text-sm text-[var(--text-dim)] mb-4">–</div>
-                    <div class="text-center p-2 rounded-xl bg-white/5 border border-white/10">
-                        <div class="text-[8px] text-[var(--text-faint)] mb-1">Closed</div>
-                        <div id="tradeShareClosed" class="text-xs sm:text-sm font-bold text-white">–</div>
+                    <div class="text-xs sm:text-sm font-semibold tracking-wide text-[var(--text-faint)] mb-1 uppercase">Closing P&amp;L</div>
+                    <div id="tradeShareTotal" class="text-4xl sm:text-5xl font-bold leading-none mb-1">–</div>
+                    <div id="tradeShareTotalIdr" class="text-base sm:text-lg text-[var(--text-dim)] mb-7">–</div>
+                    <div class="text-center p-1.5 sm:p-2 rounded-xl bg-white/5 border border-white/10">
+                        <div class="text-[9px] sm:text-[10px] text-[var(--text-faint)] mb-1">Closed</div>
+                        <div id="tradeShareClosed" class="text-sm sm:text-base font-bold text-white">–</div>
                     </div>
                 </div>
             </div>
@@ -1243,7 +1384,7 @@
 
             const totalEl = document.getElementById('resultCardTotal');
             totalEl.textContent = `${isProfit ? '+' : ''}${total.toFixed(2)} USDT`;
-            totalEl.className = `text-3xl sm:text-4xl font-bold leading-none mb-1 ${isProfit ? 'text-emerald-400' : 'text-rose-400'}`;
+            totalEl.className = `text-4xl sm:text-5xl font-bold leading-none mb-1 ${isProfit ? 'text-emerald-400' : 'text-rose-400'}`;
 
             document.getElementById('resultCardLabel').textContent = isNetPnlView ? 'Total Net P&L' : 'Total P&L';
             document.getElementById('resultCardTotalIdr').textContent = formatRupiah(total * currentKursIdr);
@@ -1253,7 +1394,7 @@
             const avgDaily = lastQuickStats.daily || 0;
             const avgDailyEl = document.getElementById('resultCardAvgDaily');
             avgDailyEl.textContent = `${avgDaily >= 0 ? '+' : ''}${avgDaily.toFixed(2)}`;
-            avgDailyEl.className = `text-xs sm:text-sm font-bold ${avgDaily >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
+            avgDailyEl.className = `text-sm sm:text-base font-bold ${avgDaily >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
 
             const now = new Date();
             document.getElementById('resultCardDate').textContent = now.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
@@ -1335,18 +1476,18 @@
         // Kotak label kecil di atas + nilai gede di bawah, semuanya di-center
         // pakai textBaseline 'middle' -> dijamin pas, ga meleset.
         function drawStatBox(ctx, x, y, w, h, label, value, valueColor) {
-            drawRoundRectPath(ctx, x, y, w, h, 16);
+            drawRoundRectPath(ctx, x, y, w, h, 14);
             ctx.fillStyle = 'rgba(255,255,255,0.05)';
             ctx.fill();
 
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillStyle = '#565e70';
-            ctx.font = `600 20px ${CARD_FONT}`;
+            ctx.font = `600 13px ${CARD_FONT}`;
             ctx.fillText(label, x + w / 2, y + h * 0.35);
 
             ctx.fillStyle = valueColor || '#ffffff';
-            ctx.font = `700 30px ${CARD_FONT}`;
+            ctx.font = `700 20px ${CARD_FONT}`;
             ctx.fillText(value, x + w / 2, y + h * 0.68);
         }
 
@@ -1387,15 +1528,15 @@
             ctx.fillRect(0, 0, W, H);
             ctx.drawImage(bgImg, 0, 0, W, H);
 
-            // Teks cuma ditaruh di kolom kiri (area kosong di gambar), dipersempit
-            // dikit (0.46 bukan 0.5) biar ga nyenggol karakternya yang nempel di kanan.
+            // Teks cuma ditaruh di kolom kiri (area kosong di gambar), biar
+            // ga nutupin karakternya yang nempel di kanan.
             const PAD = 56;
             const cx = PAD;
             let cy = PAD;
-            const colW = W * 0.46;
+            const colW = W * 0.5;
 
-            const logoSize = 76;
-            drawRoundRectPath(ctx, cx, cy, logoSize, logoSize, 18);
+            const logoSize = 48;
+            drawRoundRectPath(ctx, cx, cy, logoSize, logoSize, 14);
             ctx.fillStyle = 'rgba(217,164,65,0.18)';
             ctx.fill();
             ctx.strokeStyle = 'rgba(217,164,65,0.45)';
@@ -1403,42 +1544,34 @@
             ctx.stroke();
             drawLogoIcon(ctx, cx, cy, logoSize, '#ffffff');
 
-            // Judul & tanggal di-center vertikal dalam tinggi kotak logo,
-            // dihitung dari tinggi baris teksnya sendiri (bukan fraksi tetap)
-            // biar rapi berapapun ukuran fontnya.
-            const textX = cx + logoSize + 18;
-            const titleFont = 33, dateFont = 23;
-            const titleLineH = titleFont * 1.15, dateLineH = dateFont * 1.15, lineGap = 8;
-            const headerTextH = titleLineH + lineGap + dateLineH;
-            const headerTextTop = cy + (logoSize - headerTextH) / 2;
+            const textX = cx + logoSize + 14;
             ctx.textAlign = 'left';
-            ctx.textBaseline = 'top';
+            ctx.textBaseline = 'middle';
             ctx.fillStyle = '#ffffff';
-            ctx.font = `700 ${titleFont}px ${CARD_FONT}`;
-            ctx.fillText('Trading Log', textX, headerTextTop);
+            ctx.font = `700 22px ${CARD_FONT}`;
+            ctx.fillText('Trading Log', textX, cy + logoSize * 0.36);
             ctx.fillStyle = '#c9cdd6';
-            ctx.font = `400 ${dateFont}px ${CARD_FONT}`;
-            ctx.fillText(dateText, textX, headerTextTop + titleLineH + lineGap);
+            ctx.font = `400 15px ${CARD_FONT}`;
+            ctx.fillText(dateText, textX, cy + logoSize * 0.76);
 
-            cy += logoSize + 28;
+            cy += logoSize + Math.round(H * 0.06) + 16;
 
+            ctx.textBaseline = 'top';
             ctx.fillStyle = '#c9cdd6';
             ctx.font = `700 24px ${CARD_FONT}`;
             ctx.fillText(label, cx, cy);
             cy += 24 + 10;
 
             ctx.fillStyle = isProfit ? '#34d399' : '#fb7185';
-            ctx.font = `700 88px ${CARD_FONT}`;
+            ctx.font = `700 84px ${CARD_FONT}`;
             ctx.fillText(totalText, cx, cy);
-            cy += 88 + 16;
+            cy += 84 + 14;
 
             ctx.fillStyle = '#dfe2e8';
             ctx.font = `400 33px ${CARD_FONT}`;
             ctx.fillText(idrText, cx, cy);
+            cy += 33 + Math.round(H * 0.10) + 18;
 
-            // Kotak statistik di-anchor ke BAWAH kartu (bukan nyambung dari atas)
-            // -> jaraknya ke teks di atas otomatis lega, dan ga pernah nyenggol
-            // area gambar karena tetap dalam kolom kiri yang udah dipersempit.
             const avgDaily = lastQuickStats.daily || 0;
             const avgDailyText = `${avgDaily >= 0 ? '+' : ''}${avgDaily.toFixed(2)}`;
             const stats = [
@@ -1446,12 +1579,11 @@
                 { label: 'WIN RATE', value: `${res.winRate || 0}%` },
                 { label: 'AVG HARIAN', value: avgDailyText, color: avgDaily >= 0 ? '#34d399' : '#fb7185' }
             ];
-            const boxGap = 10;
+            const boxGap = 8;
             const boxW = (colW - boxGap * 2) / 3;
-            const boxH = 124;
-            const statRowY = H - PAD - boxH;
+            const boxH = 86;
             stats.forEach((s, i) => {
-                drawStatBox(ctx, cx + i * (boxW + boxGap), statRowY, boxW, boxH, s.label, s.value, s.color);
+                drawStatBox(ctx, cx + i * (boxW + boxGap), cy, boxW, boxH, s.label, s.value, s.color);
             });
 
             return canvas;
@@ -1461,10 +1593,9 @@
             try {
                 const canvas = await buildResultCardCanvas();
                 const now = new Date();
-                const p = n => String(n).padStart(2, '0');
-                const ts = `${now.getFullYear()}${p(now.getMonth() + 1)}${p(now.getDate())}_${p(now.getHours())}${p(now.getMinutes())}${p(now.getSeconds())}`;
-                const kind = isNetPnlView ? 'Net' : 'Total';
-                downloadCanvasCard(canvas, `TradingLog_${kind}_${ts}.png`);
+                const ts = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}`;
+                const prefix = isNetPnlView ? 'TradingLog_Net' : 'TradingLog_Total';
+                downloadCanvasCard(canvas, `${prefix}_${ts}.png`);
             } catch (err) {
                 console.log(err);
                 showToast('Gagal muat gambar background', 'error');
@@ -1491,7 +1622,7 @@
 
             const totalEl = document.getElementById('tradeShareTotal');
             totalEl.textContent = `${isProfit ? '+' : ''}${pnlNum.toFixed(2)} USDT`;
-            totalEl.className = `text-3xl sm:text-4xl font-bold leading-none mb-1 ${isProfit ? 'text-emerald-400' : 'text-rose-400'}`;
+            totalEl.className = `text-4xl sm:text-5xl font-bold leading-none mb-1 ${isProfit ? 'text-emerald-400' : 'text-rose-400'}`;
 
             document.getElementById('tradeShareTotalIdr').textContent = formatRupiah(pnlNum * currentKursIdr);
             document.getElementById('tradeShareClosed').textContent = item.closed || '-';
@@ -1528,14 +1659,13 @@
             ctx.fillRect(0, 0, W, H);
             ctx.drawImage(bgImg, 0, 0, W, H);
 
-            // Kolom teks dipersempit (0.46 bukan 0.5) biar ga nyenggol karakter.
             const PAD = 56;
             const cx = PAD;
             let cy = PAD;
-            const colW = W * 0.46;
+            const colW = W * 0.5;
 
-            const logoSize = 64;
-            drawRoundRectPath(ctx, cx, cy, logoSize, logoSize, 16);
+            const logoSize = 42;
+            drawRoundRectPath(ctx, cx, cy, logoSize, logoSize, 12);
             ctx.fillStyle = 'rgba(217,164,65,0.18)';
             ctx.fill();
             ctx.strokeStyle = 'rgba(217,164,65,0.45)';
@@ -1546,16 +1676,16 @@
             ctx.textAlign = 'left';
             ctx.textBaseline = 'middle';
             ctx.fillStyle = '#ffffff';
-            ctx.font = `700 30px ${CARD_FONT}`;
-            ctx.fillText('Trading Log', cx + logoSize + 16, cy + logoSize / 2);
+            ctx.font = `700 20px ${CARD_FONT}`;
+            ctx.fillText('Trading Log', cx + logoSize + 14, cy + logoSize / 2);
 
             // Badge PROFIT/LOSS: dibatasi nempel di ujung kanan KOLOM KIRI
             // (bukan ujung kanan seluruh gambar), biar ga numpuk sama karakter.
-            ctx.font = `700 23px ${CARD_FONT}`;
+            ctx.font = `700 15px ${CARD_FONT}`;
             const badgeTextW = ctx.measureText(badgeText).width;
-            const badgePadX = 22;
+            const badgePadX = 16;
             const badgeW = badgeTextW + badgePadX * 2;
-            const badgeH = 48;
+            const badgeH = 36;
             const badgeX = cx + colW - badgeW;
             const badgeY = cy + logoSize / 2 - badgeH / 2;
             drawRoundRectPath(ctx, badgeX, badgeY, badgeW, badgeH, badgeH / 2);
@@ -1566,13 +1696,13 @@
             ctx.fillText(badgeText, badgeX + badgeW / 2, badgeY + badgeH / 2 + 1);
             ctx.textAlign = 'left';
 
-            cy += logoSize + 28;
+            cy += logoSize + Math.round(H * 0.06) + 16;
 
             ctx.textBaseline = 'top';
             ctx.fillStyle = '#ffffff';
-            ctx.font = `700 57px ${CARD_FONT}`;
+            ctx.font = `700 38px ${CARD_FONT}`;
             ctx.fillText(item.pair, cx, cy);
-            cy += 57 + 22;
+            cy += 38 + 26;
 
             ctx.fillStyle = '#c9cdd6';
             ctx.font = `700 24px ${CARD_FONT}`;
@@ -1580,19 +1710,16 @@
             cy += 24 + 10;
 
             ctx.fillStyle = badgeColor;
-            ctx.font = `700 88px ${CARD_FONT}`;
+            ctx.font = `700 84px ${CARD_FONT}`;
             ctx.fillText(totalText, cx, cy);
-            cy += 88 + 16;
+            cy += 84 + 14;
 
             ctx.fillStyle = '#dfe2e8';
             ctx.font = `400 33px ${CARD_FONT}`;
             ctx.fillText(idrText, cx, cy);
+            cy += 33 + Math.round(H * 0.10) + 18;
 
-            // Kotak Closed di-anchor ke BAWAH kartu, jarak ke teks di atas
-            // otomatis lega dan tetap di kolom kiri (ga nyenggol karakter).
-            const boxH = 124;
-            const statRowY = H - PAD - boxH;
-            drawStatBox(ctx, cx, statRowY, colW, boxH, 'CLOSED', item.closed || '-');
+            drawStatBox(ctx, cx, cy, colW, 86, 'CLOSED', item.closed || '-');
 
             return canvas;
         }
@@ -1603,8 +1730,7 @@
                 const canvas = await buildTradeShareCanvas(tradeShareItem);
                 const pairName = (tradeShareItem.pair || 'trade').replace(/[^A-Z0-9]/gi, '');
                 const now = new Date();
-                const p = n => String(n).padStart(2, '0');
-                const ts = `${now.getFullYear()}${p(now.getMonth() + 1)}${p(now.getDate())}_${p(now.getHours())}${p(now.getMinutes())}${p(now.getSeconds())}`;
+                const ts = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}`;
                 downloadCanvasCard(canvas, `TradingLog_${pairName}_${ts}.png`);
             } catch (err) {
                 console.log(err);
